@@ -16,8 +16,8 @@ public interface StatsRepository extends JpaRepository<Hit, Long> {
             "WHERE h.timestamp BETWEEN :startDateTime AND :endDateTime " +
             "GROUP BY h.app, h.uri " +
             "ORDER BY COUNT (h.ip) DESC")
-    List<HitDtoOutput> getHitsWithUniqueIpAndAllUris(@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime);
-    //List<HitDtoOutput> getHitsWithUniqueIpAndAllUris(LocalDateTime startDateTime, LocalDateTime endDateTime);
+    List<HitDtoOutput> getHitsWithUniqueIpAndAllUris(@Param("startDateTime") LocalDateTime startDateTime,
+                                                     @Param("endDateTime") LocalDateTime endDateTime);
 
     @Query("SELECT new ru.practicum.dto.HitDtoOutput(h.app, h.uri, COUNT (DISTINCT h.ip)) " +
             "FROM Hit AS h " +
@@ -25,16 +25,17 @@ public interface StatsRepository extends JpaRepository<Hit, Long> {
             "AND h.uri IN :uris " +
             "GROUP BY h.app, h.uri " +
             "ORDER BY COUNT (h.ip) DESC")
-    List<HitDtoOutput> getHitsWithUniqueIp(@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime, @Param("uris") List<String> uris);
-    //List<HitDtoOutput> getHitsWithUniqueIp(LocalDateTime startDateTime, LocalDateTime endDateTime, List<String> uris);
+    List<HitDtoOutput> getHitsWithUniqueIp(@Param("startDateTime") LocalDateTime startDateTime,
+                                           @Param("endDateTime") LocalDateTime endDateTime,
+                                           @Param("uris") List<String> uris);
 
     @Query("SELECT new ru.practicum.dto.HitDtoOutput(h.app, h.uri, COUNT (h.ip)) " +
             "FROM Hit AS h " +
             "WHERE h.timestamp BETWEEN :startDateTime AND :endDateTime " +
             "GROUP BY h.app, h.uri " +
             "ORDER BY COUNT (h.ip) DESC")
-    List<HitDtoOutput> getHitsAllUris(@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime);
-    //List<HitDtoOutput> getHitsAllUris(LocalDateTime startDateTime, LocalDateTime endDateTime);
+    List<HitDtoOutput> getHitsAllUris(@Param("startDateTime") LocalDateTime startDateTime,
+                                      @Param("endDateTime") LocalDateTime endDateTime);
 
     @Query("SELECT new ru.practicum.dto.HitDtoOutput(h.app, h.uri, COUNT (h.ip)) " +
             "FROM Hit AS h " +
@@ -42,7 +43,8 @@ public interface StatsRepository extends JpaRepository<Hit, Long> {
             "AND h.uri IN :uris " +
             "GROUP BY h.app, h.uri " +
             "ORDER BY COUNT (h.ip) DESC")
-    List<HitDtoOutput> getHits(@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime, @Param("uris") List<String> uris);
-    //List<HitDtoOutput> getHits(LocalDateTime startDateTime, LocalDateTime endDateTime, List<String> uris);
+    List<HitDtoOutput> getHits(@Param("startDateTime") LocalDateTime startDateTime,
+                               @Param("endDateTime") LocalDateTime endDateTime,
+                               @Param("uris") List<String> uris);
 
 }

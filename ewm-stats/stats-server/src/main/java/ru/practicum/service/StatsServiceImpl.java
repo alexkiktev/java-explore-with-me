@@ -5,11 +5,8 @@ import org.springframework.stereotype.Service;
 import ru.practicum.dto.HitDtoInput;
 import ru.practicum.dto.HitDtoOutput;
 import ru.practicum.mapper.StatsMapper;
-import ru.practicum.model.Hit;
 import ru.practicum.repository.StatsRepository;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
