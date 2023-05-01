@@ -28,6 +28,18 @@ public class RestExceptionHandler {
     }
 
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError onIllegalArgumentException(IllegalArgumentException ex) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return ApiError.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .reason("Incorrectly made request.")
+                .message("В одном из полей текст некорректной длины. " + Objects.requireNonNull(ex.getMessage()))
+                .timestamp(LocalDateTime.now().format(formatter))
+                .build();
+    }
+
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError onNotUniqueValueException(ConstraintViolationException ex) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -46,6 +58,18 @@ public class RestExceptionHandler {
         return ApiError.builder()
                 .status(HttpStatus.NOT_FOUND)
                 .reason("The required object was not found.")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now().format(formatter))
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiError onValidationRequestException(ValidationRequestException ex) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return ApiError.builder()
+                .status(HttpStatus.FORBIDDEN)
+                .reason("For the requested operation the conditions are not met.")
                 .message(ex.getMessage())
                 .timestamp(LocalDateTime.now().format(formatter))
                 .build();
