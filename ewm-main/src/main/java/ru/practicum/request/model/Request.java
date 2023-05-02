@@ -25,6 +25,7 @@ public class Request {
     @JoinColumn(name = "requester_id", nullable = false)
     private User requester;
     @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private StatusRequest status;
     @Column(name = "created", nullable = false)
     private LocalDateTime created;

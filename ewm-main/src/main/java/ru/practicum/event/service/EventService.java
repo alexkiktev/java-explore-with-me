@@ -2,7 +2,7 @@ package ru.practicum.event.service;
 
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.NewEventDto;
-import ru.practicum.event.dto.UpdateEventAdminRequestDto;
+import ru.practicum.event.dto.UpdateEventDto;
 import ru.practicum.event.model.StateEvent;
 import ru.practicum.exception.ValidationRequestException;
 
@@ -11,10 +11,15 @@ import java.util.List;
 
 public interface EventService {
 
-    List<EventFullDto> getEvents(List<Long> users, List<StateEvent> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size);
+    List<EventFullDto> getEventsAdmin(List<Long> users, List<StateEvent> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size);
 
-    EventFullDto updateEvent(Long eventId, UpdateEventAdminRequestDto updateEventAdminRequestDto);
+    EventFullDto updateEventAdmin(Long eventId, UpdateEventDto updateEventDto);
 
     EventFullDto createEvent(Long userId, NewEventDto newEventDto) throws ValidationRequestException;
 
+    EventFullDto updateEventByUser(Long userId, Long eventId, UpdateEventDto updateEventDto);
+
+    List<EventFullDto> getEventsByUser(Long userId, Integer from, Integer size);
+
+    EventFullDto getEventByUserAndId(Long userId, Long eventId);
 }

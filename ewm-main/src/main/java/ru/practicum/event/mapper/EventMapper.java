@@ -15,10 +15,6 @@ import java.time.format.DateTimeFormatter;
 @Service
 public class EventMapper {
 
-    //@Mapping(target = "category.id", source = "category")
-    //@Mapping(target = "createdOn", expression = "java(java.time.LocalDateTime.now())")
-    //public Event toEvent(NewEventDto newEventDto);
-
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public Event toEvent(@NotNull NewEventDto newEventDto) {

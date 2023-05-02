@@ -9,7 +9,6 @@ import ru.practicum.user.dto.UserDto;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.user.mapper.UserMapper;
 import ru.practicum.user.repository.UserRepository;
-import ru.practicum.user.service.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
