@@ -8,6 +8,10 @@ import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.UpdateEventDto;
 import ru.practicum.event.service.EventService;
+import ru.practicum.request.dto.EventRequestStatusUpdateRequestDto;
+import ru.practicum.request.dto.EventRequestStatusUpdateResultDto;
+import ru.practicum.request.dto.RequestDto;
+import ru.practicum.request.service.RequestService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -22,6 +26,7 @@ import java.util.List;
 public class EventPrivateController {
 
     private final EventService eventService;
+    private final RequestService requestService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -40,6 +45,15 @@ public class EventPrivateController {
         return eventService.updateEventByUser(userId, eventId, updateEventDto);
     }
 
+    @PatchMapping("/{eventId}/requests")
+    @ResponseStatus(HttpStatus.OK)
+    public EventRequestStatusUpdateResultDto updateRequestsStatus(@PathVariable Long userId,
+                                                                  @PathVariable Long eventId,
+                                                                  @RequestBody EventRequestStatusUpdateRequestDto eventRequestStatusUpdateRequestDto) {
+        log.info("Получен PATCH-запрос на изменение статусов заявок на участие в событии {}", eventId);
+        return requestService.updateRequestsStatus(userId, eventId, eventRequestStatusUpdateRequestDto);
+    }
+
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<EventFullDto> getEventsByUser(@PathVariable Long userId,
@@ -55,6 +69,14 @@ public class EventPrivateController {
                                        @PathVariable Long eventId) {
         log.info("Получен GET-запрос события id {} от пользователя {}", userId, eventId);
         return eventService.getEventByUserAndId(userId, eventId);
+    }
+
+    @GetMapping("/{eventId}/requests")
+    @ResponseStatus(HttpStatus.OK)
+    public List<RequestDto> getRequestsForUserEvent(@PathVariable Long userId,
+                                                    @PathVariable Long eventId) {
+        log.info("Получен GET-запрос заявок на участие в событии id {} пользователя {}", eventId, userId);
+        return requestService.getRequestsForUserEvent(userId, eventId);
     }
 
 }

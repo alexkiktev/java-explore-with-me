@@ -17,6 +17,8 @@ import ru.practicum.event.repository.LocationRepository;
 import ru.practicum.exception.BadRequestException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationRequestException;
+import ru.practicum.request.dto.EventRequestStatusUpdateRequestDto;
+import ru.practicum.request.dto.EventRequestStatusUpdateResultDto;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
@@ -90,7 +92,7 @@ public class EventServiceImpl implements EventService{
             throw new ValidationRequestException(String.format("Only the owner can change the event id %s", eventId));
         }
         if (event.getState().equals(StateEvent.PUBLISHED)) {
-            throw new BadRequestException("Event must not be published");
+            throw new ValidationRequestException("Event must not be published");
         }
         if (updateEventDto.getEventDate() != null) {
             if (!updateEventDto.getEventDate().isAfter(LocalDateTime.now().plusHours(2))) {
@@ -152,11 +154,22 @@ public class EventServiceImpl implements EventService{
         List<Event> events = eventsPage.getContent();
         for (Event event : events) {
             event.setViews(event.getViews() + 1);
+            eventRepository.save(event);
             eventShortDtos.add(eventMapper.toEventShortDto(event));
         }
         log.info("Результат поиска событий по заданным критериям: {}", eventShortDtos);
-        statEventService.save("ewm-service", request.getRequestURI(), request.getRemoteAddr());
         return eventShortDtos;
+    }
+
+    @Override
+    public EventFullDto getEventByIdPublic(Long id, HttpServletRequest request) {
+        Event event = eventRepository.findEventByIdAndState(id, StateEvent.PUBLISHED);
+        if (event == null) {
+            throw new NotFoundException(String.format("Event with id=%s was not found", id));
+        }
+        event.setViews(event.getViews() + 1);
+        eventRepository.save(event);
+        return eventMapper.toEventDto(event);
     }
 
     private User getUser(Long userId) {

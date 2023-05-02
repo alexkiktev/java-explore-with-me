@@ -52,18 +52,6 @@ public class RestExceptionHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError onNotUniqueValueException(ConstraintViolationException ex) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        return ApiError.builder()
-                .status(HttpStatus.CONFLICT)
-                .reason("Integrity constraint has been violated.")
-                .message(ex.getMessage() + "; " + ex.getCause().getMessage())
-                .timestamp(LocalDateTime.now().format(formatter))
-                .build();
-    }
-
-    @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiError onNotFoundException(NotFoundException ex) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -76,11 +64,23 @@ public class RestExceptionHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError onNotUniqueValueException(ConstraintViolationException ex) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return ApiError.builder()
+                .status(HttpStatus.CONFLICT)
+                .reason("Integrity constraint has been violated.")
+                .message(ex.getMessage() + "; " + ex.getCause().getMessage())
+                .timestamp(LocalDateTime.now().format(formatter))
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError onValidationRequestException(ValidationRequestException ex) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return ApiError.builder()
-                .status(HttpStatus.FORBIDDEN)
+                .status(HttpStatus.CONFLICT)
                 .reason("For the requested operation the conditions are not met.")
                 .message(ex.getMessage())
                 .timestamp(LocalDateTime.now().format(formatter))

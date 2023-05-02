@@ -8,6 +8,8 @@ import ru.practicum.event.model.StateEvent;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationRequestException;
+import ru.practicum.request.dto.EventRequestStatusUpdateRequestDto;
+import ru.practicum.request.dto.EventRequestStatusUpdateResultDto;
 import ru.practicum.request.dto.RequestDto;
 import ru.practicum.request.mapper.RequestMapper;
 import ru.practicum.request.model.Request;
@@ -67,11 +69,67 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    public EventRequestStatusUpdateResultDto updateRequestsStatus(Long userId, Long eventId, EventRequestStatusUpdateRequestDto eventRequestStatusUpdateRequestDto) {
+        getUser(userId);
+        Event event = getEvent(eventId);
+        EventRequestStatusUpdateResultDto eventRequestStatusUpdateResultDto = new EventRequestStatusUpdateResultDto();
+        if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) {
+            return eventRequestStatusUpdateResultDto;
+        }
+        List<RequestDto> confirmedRequests = new ArrayList<>();
+        List<RequestDto> rejectedRequests = new ArrayList<>();
+        List<Request> requests = requestRepository.findByEventIdAndStatus(eventId, StatusRequest.PENDING);
+        if (eventRequestStatusUpdateRequestDto.getStatus().equals(StatusRequest.REJECTED)) {
+            for (Request request : requests) {
+                if (request.getStatus().equals(StatusRequest.CONFIRMED)) {
+                    throw new ValidationRequestException("An already accepted application cannot be canceled.");
+                }
+                request.setStatus(StatusRequest.REJECTED);
+                requestRepository.save(request);
+                rejectedRequests.add(requestMapper.toRequestDto(request));
+            }
+        }
+        if ((eventRequestStatusUpdateRequestDto.getStatus().equals(StatusRequest.CONFIRMED)) && (event.getConfirmedRequests() >= event.getParticipantLimit())) {
+            throw new ValidationRequestException("Participation limit exceeded.");
+        } else {
+            for (Request request : requests) {
+                if (event.getParticipantLimit() > event.getConfirmedRequests()) {
+                    event.setConfirmedRequests(event.getConfirmedRequests() + 1);
+                    eventRepository.save(event);
+                    request.setStatus(StatusRequest.CONFIRMED);
+                    requestRepository.save(request);
+                    confirmedRequests.add(requestMapper.toRequestDto(request));
+                } else {
+                    request.setStatus(StatusRequest.REJECTED);
+                    requestRepository.save(request);
+                    rejectedRequests.add(requestMapper.toRequestDto(request));
+                }
+            }
+        }
+        eventRequestStatusUpdateResultDto.setConfirmedRequests(confirmedRequests);
+        eventRequestStatusUpdateResultDto.setRejectedRequests(rejectedRequests);
+        log.info("Обновлен статус заявок {} для события id {}: ", eventRequestStatusUpdateRequestDto.getRequestIds(), eventId);
+        return eventRequestStatusUpdateResultDto;
+    }
+
+    @Override
     public List<RequestDto> getRequestsByUser(Long userId) {
         getUser(userId);
         List<RequestDto> requestDtos = new ArrayList<>();
         requestRepository.findAllByRequesterId(userId).forEach(r -> requestDtos.add(requestMapper.toRequestDto(r)));
         log.info("Список заявок пользователя id {}: {}", userId, requestDtos);
+        return requestDtos;
+    }
+
+    @Override
+    public List<RequestDto> getRequestsForUserEvent(Long userId, Long eventId) {
+        getUser(userId);
+        Event event = getEvent(eventId);
+        List<RequestDto> requestDtos = new ArrayList<>();
+        if (event.getInitiator().getId().equals(userId)) {
+            requestRepository.findByEventId(eventId).forEach(r -> requestDtos.add(requestMapper.toRequestDto(r)));
+            log.info("Список заявок на событие id {}: {}", eventId, requestDtos);
+        }
         return requestDtos;
     }
 

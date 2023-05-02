@@ -7,6 +7,8 @@ import ru.practicum.event.dto.UpdateEventDto;
 import ru.practicum.event.model.SortParam;
 import ru.practicum.event.model.StateEvent;
 import ru.practicum.exception.ValidationRequestException;
+import ru.practicum.request.dto.EventRequestStatusUpdateRequestDto;
+import ru.practicum.request.dto.EventRequestStatusUpdateResultDto;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -27,5 +29,7 @@ public interface EventService {
     EventFullDto getEventByUserAndId(Long userId, Long eventId);
 
     List<EventShortDto> getEventsWithParameters(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, SortParam sort, Integer from, Integer size, HttpServletRequest request);
+
+    EventFullDto getEventByIdPublic(Long id, HttpServletRequest request);
 
 }
