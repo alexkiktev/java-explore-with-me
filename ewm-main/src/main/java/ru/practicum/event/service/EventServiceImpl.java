@@ -2,6 +2,7 @@ package ru.practicum.event.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -10,10 +11,7 @@ import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
 import ru.practicum.event.dto.*;
 import ru.practicum.event.mapper.EventMapper;
-import ru.practicum.event.model.Event;
-import ru.practicum.event.model.Location;
-import ru.practicum.event.model.StateAction;
-import ru.practicum.event.model.StateEvent;
+import ru.practicum.event.model.*;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.event.repository.LocationRepository;
 import ru.practicum.exception.BadRequestException;
@@ -22,6 +20,7 @@ import ru.practicum.exception.ValidationRequestException;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,16 +36,6 @@ public class EventServiceImpl implements EventService{
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
-
-    @Override
-    public List<EventFullDto> getEventsAdmin(List<Long> users, List<StateEvent> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {
-        Pageable pageParams = PageRequest.of(from / size, size);
-        List<EventFullDto> eventFullDtos = new ArrayList<>();
-        Specification<Event> eventCriterias = EventCriteriaQuery.getFilterEventsAdmin(users, states, categories, rangeStart, rangeEnd);
-        eventRepository.findAll(eventCriterias, pageParams).getContent().forEach(e -> eventFullDtos.add(eventMapper.toEventDto(e)));
-        log.info("Выполнен поиск событий администратором по заданным критериям");
-        return eventFullDtos;
-    }
 
     @Override
     public EventFullDto updateEventAdmin(Long eventId, UpdateEventDto updateEventDto) {
@@ -142,6 +131,32 @@ public class EventServiceImpl implements EventService{
         Event event = getEvent(eventId);
         log.info("Событие id {} созданное пользователем: {}", eventId, userId);
         return eventMapper.toEventDto(event);
+    }
+
+    @Override
+    public List<EventFullDto> getEventsAdmin(List<Long> users, List<StateEvent> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {
+        Pageable pageParams = PageRequest.of(from / size, size);
+        List<EventFullDto> eventFullDtos = new ArrayList<>();
+        Specification<Event> eventCriterias = EventCriteriaQuery.getFilterEventsAdmin(users, states, categories, rangeStart, rangeEnd);
+        eventRepository.findAll(eventCriterias, pageParams).getContent().forEach(e -> eventFullDtos.add(eventMapper.toEventDto(e)));
+        log.info("Выполнен поиск событий администратором по заданным критериям");
+        return eventFullDtos;
+    }
+
+    @Override
+    public List<EventShortDto> getEventsWithParameters(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, SortParam sort, Integer from, Integer size, HttpServletRequest request) {
+        Pageable pageParams = PageRequest.of(from / size, size);
+        List<EventShortDto> eventShortDtos = new ArrayList<>();
+        Specification<Event> eventCriterias = EventCriteriaQuery.getFilterEventsPublic(text, categories, paid, rangeStart, rangeEnd, sort, StateEvent.PUBLISHED, onlyAvailable);
+        Page<Event> eventsPage = eventRepository.findAll(eventCriterias, pageParams);
+        List<Event> events = eventsPage.getContent();
+        for (Event event : events) {
+            event.setViews(event.getViews() + 1);
+            eventShortDtos.add(eventMapper.toEventShortDto(event));
+        }
+        log.info("Результат поиска событий по заданным критериям: {}", eventShortDtos);
+        statEventService.save("ewm-service", request.getRequestURI(), request.getRemoteAddr());
+        return eventShortDtos;
     }
 
     private User getUser(Long userId) {

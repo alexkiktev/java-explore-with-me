@@ -1,11 +1,14 @@
 package ru.practicum.event.service;
 
 import ru.practicum.event.dto.EventFullDto;
+import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.UpdateEventDto;
+import ru.practicum.event.model.SortParam;
 import ru.practicum.event.model.StateEvent;
 import ru.practicum.exception.ValidationRequestException;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,4 +25,7 @@ public interface EventService {
     List<EventFullDto> getEventsByUser(Long userId, Integer from, Integer size);
 
     EventFullDto getEventByUserAndId(Long userId, Long eventId);
+
+    List<EventShortDto> getEventsWithParameters(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, SortParam sort, Integer from, Integer size, HttpServletRequest request);
+
 }

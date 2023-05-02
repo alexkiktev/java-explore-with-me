@@ -4,6 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Service;
 import ru.practicum.event.dto.EventFullDto;
+import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.model.Event;
 
@@ -11,7 +12,6 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-//@Mapper(componentModel = "spring")
 @Service
 public class EventMapper {
 
@@ -51,4 +51,19 @@ public class EventMapper {
         eventFullDto.setConfirmedRequests(0L);
         return eventFullDto;
     }
+
+    public EventShortDto toEventShortDto(Event event) {
+        EventShortDto eventShortDto = new EventShortDto();
+        eventShortDto.setId(event.getId());
+        eventShortDto.setTitle(event.getTitle());
+        eventShortDto.setAnnotation(event.getAnnotation());
+        eventShortDto.setCategory(event.getCategory());
+        eventShortDto.setEventDate(event.getEventDate());
+        eventShortDto.setInitiator(event.getInitiator());
+        eventShortDto.setPaid(event.getPaid());
+        eventShortDto.setViews(event.getViews());
+        eventShortDto.setConfirmedRequests(event.getConfirmedRequests());
+        return eventShortDto;
+    }
+
 }

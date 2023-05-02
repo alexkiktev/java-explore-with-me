@@ -17,6 +17,8 @@ import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -53,6 +55,26 @@ public class RequestServiceImpl implements RequestService {
         return requestMapper.toRequestDto(requestRepository.save(request));
     }
 
+    @Override
+    public RequestDto cancelRequest(Long userId, Long requestId) {
+        getUser(userId);
+        Request request = getRequest(requestId);
+        if (request.getRequester().getId().equals(userId)) {
+            request.setStatus(StatusRequest.CANCELED);
+        }
+        log.info("Отменена заявка id {}", requestId);
+        return requestMapper.toRequestDto(requestRepository.save(request));
+    }
+
+    @Override
+    public List<RequestDto> getRequestsByUser(Long userId) {
+        getUser(userId);
+        List<RequestDto> requestDtos = new ArrayList<>();
+        requestRepository.findAllByRequesterId(userId).forEach(r -> requestDtos.add(requestMapper.toRequestDto(r)));
+        log.info("Список заявок пользователя id {}: {}", userId, requestDtos);
+        return requestDtos;
+    }
+
     private User getUser(Long userId) {
         return userRepository.findById(userId).orElseThrow(() ->
                 new NotFoundException(String.format("User with id=%s was not found", userId)));
@@ -61,6 +83,11 @@ public class RequestServiceImpl implements RequestService {
     private Event getEvent(Long eventId) {
         return eventRepository.findById(eventId).orElseThrow(() ->
                 new NotFoundException(String.format("Event with id=%s was not found", eventId)));
+    }
+
+    private Request getRequest(Long requestId) {
+        return requestRepository.findById(requestId).orElseThrow(() ->
+                new NotFoundException(String.format("Request with id=%s was not found", requestId)));
     }
 
 }
