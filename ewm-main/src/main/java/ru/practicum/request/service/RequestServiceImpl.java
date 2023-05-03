@@ -47,18 +47,23 @@ public class RequestServiceImpl implements RequestService {
         if (!event.getState().equals(StateEvent.PUBLISHED)) {
             throw new ValidationRequestException("You cannot participate in an unpublished event.");
         }
-        if (event.getConfirmedRequests() >= event.getParticipantLimit()) {
+        if (Objects.equals(Long.valueOf(event.getParticipantLimit()), event.getConfirmedRequests())) {
             throw new ValidationRequestException(String.format("The limit of requests per event %s has been reached",
                     event.getTitle()));
         }
         Request request = new Request();
         request.setEvent(event);
         request.setRequester(user);
-        request.setStatus(event.getRequestModeration() ? StatusRequest.PENDING : StatusRequest.CONFIRMED);
+        if (event.getRequestModeration()) {
+            request.setStatus(StatusRequest.PENDING);
+        } else {
+            request.setStatus(StatusRequest.CONFIRMED);
+            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
+            eventRepository.save(event);
+        }
         request.setCreated(LocalDateTime.now());
         log.info("Пользователем {} создана заявка на участие в событии: {}", userId, eventId);
-        RequestDto requestDto = requestMapper.toRequestDto(requestRepository.save(request));
-        return requestDto;
+        return requestMapper.toRequestDto(requestRepository.save(request));
     }
 
     @Override
