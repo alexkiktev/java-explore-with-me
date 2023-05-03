@@ -49,7 +49,8 @@ public class EventPrivateController {
     @ResponseStatus(HttpStatus.OK)
     public EventRequestStatusUpdateResultDto updateRequestsStatus(@PathVariable Long userId,
                                                                   @PathVariable Long eventId,
-                                                                  @RequestBody EventRequestStatusUpdateRequestDto eventRequestStatusUpdateRequestDto) {
+                                                                  @RequestBody EventRequestStatusUpdateRequestDto
+                                                                              eventRequestStatusUpdateRequestDto) {
         log.info("Получен PATCH-запрос на изменение статусов заявок на участие в событии {}", eventId);
         return requestService.updateRequestsStatus(userId, eventId, eventRequestStatusUpdateRequestDto);
     }
@@ -57,8 +58,10 @@ public class EventPrivateController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<EventFullDto> getEventsByUser(@PathVariable Long userId,
-                                              @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
-                                              @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
+                                              @PositiveOrZero @RequestParam(name = "from",
+                                                      defaultValue = "0") Integer from,
+                                              @Positive @RequestParam(name = "size",
+                                                      defaultValue = "10") Integer size) {
         log.info("Получен GET-запрос событий, добавленных текущим пользователем {}", userId);
         return eventService.getEventsByUser(userId, from, size);
     }

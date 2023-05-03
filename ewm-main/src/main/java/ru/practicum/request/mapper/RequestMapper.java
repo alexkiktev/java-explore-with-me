@@ -15,6 +15,6 @@ public class RequestMapper {
         requestDto.setStatus(request.getStatus());
         requestDto.setCreated(request.getCreated());
         return requestDto;
-    };
+    }
 
 }

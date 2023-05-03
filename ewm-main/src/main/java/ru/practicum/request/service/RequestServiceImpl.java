@@ -40,13 +40,15 @@ public class RequestServiceImpl implements RequestService {
             throw new ValidationRequestException("Запрос на участие не был добавлен: нельзя добавить повторный запрос");
         }
         if (event.getInitiator().getId().equals(userId)) {
-            throw new ValidationRequestException("The initiator of the event cannot add a request to participate in his event");
+            throw new ValidationRequestException("The initiator of the event cannot add a request to participate " +
+                    "in his event");
         }
         if (!event.getState().equals(StateEvent.PUBLISHED)) {
             throw new ValidationRequestException("You cannot participate in an unpublished event.");
         }
         if (event.getConfirmedRequests() >= event.getParticipantLimit()) {
-            throw new ValidationRequestException(String.format("The limit of requests per event %s has been reached", event.getTitle()));
+            throw new ValidationRequestException(String.format("The limit of requests per event %s has been reached",
+                    event.getTitle()));
         }
         Request request = new Request();
         request.setEvent(event);
@@ -69,7 +71,9 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    public EventRequestStatusUpdateResultDto updateRequestsStatus(Long userId, Long eventId, EventRequestStatusUpdateRequestDto eventRequestStatusUpdateRequestDto) {
+    public EventRequestStatusUpdateResultDto updateRequestsStatus(Long userId, Long eventId,
+                                                                  EventRequestStatusUpdateRequestDto
+                                                                          eventRequestStatusUpdateRequestDto) {
         getUser(userId);
         Event event = getEvent(eventId);
         EventRequestStatusUpdateResultDto eventRequestStatusUpdateResultDto = new EventRequestStatusUpdateResultDto();
@@ -89,7 +93,8 @@ public class RequestServiceImpl implements RequestService {
                 rejectedRequests.add(requestMapper.toRequestDto(request));
             }
         }
-        if ((eventRequestStatusUpdateRequestDto.getStatus().equals(StatusRequest.CONFIRMED)) && (event.getConfirmedRequests() >= event.getParticipantLimit())) {
+        if ((eventRequestStatusUpdateRequestDto.getStatus().equals(StatusRequest.CONFIRMED)) &&
+                (event.getConfirmedRequests() >= event.getParticipantLimit())) {
             throw new ValidationRequestException("Participation limit exceeded.");
         } else {
             for (Request request : requests) {
@@ -108,7 +113,8 @@ public class RequestServiceImpl implements RequestService {
         }
         eventRequestStatusUpdateResultDto.setConfirmedRequests(confirmedRequests);
         eventRequestStatusUpdateResultDto.setRejectedRequests(rejectedRequests);
-        log.info("Обновлен статус заявок {} для события id {}: ", eventRequestStatusUpdateRequestDto.getRequestIds(), eventId);
+        log.info("Обновлен статус заявок {} для события id {}: ", eventRequestStatusUpdateRequestDto.getRequestIds(),
+                eventId);
         return eventRequestStatusUpdateResultDto;
     }
 

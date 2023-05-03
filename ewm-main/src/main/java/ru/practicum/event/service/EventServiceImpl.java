@@ -7,18 +7,17 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import ru.practicum.StatsClient;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
+import ru.practicum.client.StatsMapper;
 import ru.practicum.event.dto.*;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.*;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.event.repository.LocationRepository;
-import ru.practicum.exception.BadRequestException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationRequestException;
-import ru.practicum.request.dto.EventRequestStatusUpdateRequestDto;
-import ru.practicum.request.dto.EventRequestStatusUpdateResultDto;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
@@ -38,13 +37,16 @@ public class EventServiceImpl implements EventService{
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
+    private final StatsClient statsClient;
+    private final StatsMapper statsMapper;
 
     @Override
     public EventFullDto updateEventAdmin(Long eventId, UpdateEventDto updateEventDto) {
         Event event = getEvent(eventId);
         if (updateEventDto.getEventDate() != null) {
             if (!updateEventDto.getEventDate().isAfter(LocalDateTime.now().plusHours(1))) {
-                throw new ValidationRequestException(String.format("Field: eventDate. Error: the event cannot be earlier than one hours from the current moment. Value: %s", updateEventDto.getEventDate()));
+                throw new ValidationRequestException(String.format("Field: eventDate. Error: the event cannot be " +
+                        "earlier than one hours from the current moment. Value: %s", updateEventDto.getEventDate()));
             } else {
                 event.setEventDate(updateEventDto.getEventDate());
             }
@@ -52,14 +54,16 @@ public class EventServiceImpl implements EventService{
         if (updateEventDto.getStateAction() != null) {
             if (updateEventDto.getStateAction().equals(StateAction.PUBLISH_EVENT)) {
                 if ((event.getState().equals(StateEvent.PUBLISHED)) || (event.getState().equals(StateEvent.CANCELED))) {
-                    throw new ValidationRequestException(String.format("Cannot publish the event because it's not in the right state: %s", StateEvent.PUBLISHED));
+                    throw new ValidationRequestException(String.format("Cannot publish the event because it's not in " +
+                            "the right state: %s", StateEvent.PUBLISHED));
                 }
                 event.setState(StateEvent.PUBLISHED);
                 event.setPublishedOn(LocalDateTime.now());
                 event.setViews(0L);
             } else {
                 if (event.getState().equals(StateEvent.PUBLISHED)) {
-                    throw new ValidationRequestException(String.format("Cannot publish the event because it's not in the right state: %s", StateEvent.PUBLISHED));
+                    throw new ValidationRequestException(String.format("Cannot publish the event because it's not in " +
+                            "the right state: %s", StateEvent.PUBLISHED));
                 }
                 event.setState(StateEvent.CANCELED);
             }
@@ -72,7 +76,8 @@ public class EventServiceImpl implements EventService{
     @Override
     public EventFullDto createEvent(Long userId, NewEventDto newEventDto) {
         if (!newEventDto.getEventDate().isAfter(LocalDateTime.now().plusHours(2))) {
-            throw new ValidationRequestException(String.format("Field: eventDate. Error: the event cannot be earlier than two hours from the current moment. Value: %s", newEventDto.getEventDate()));
+            throw new ValidationRequestException(String.format("Field: eventDate. Error: the event cannot be earlier " +
+                    "than two hours from the current moment. Value: %s", newEventDto.getEventDate()));
         }
         Event event = eventMapper.toEvent(newEventDto);
         event.setCategory(getCategory(newEventDto.getCategory()));
@@ -96,7 +101,8 @@ public class EventServiceImpl implements EventService{
         }
         if (updateEventDto.getEventDate() != null) {
             if (!updateEventDto.getEventDate().isAfter(LocalDateTime.now().plusHours(2))) {
-                throw new ValidationRequestException(String.format("Field: eventDate. Error: the event cannot be earlier than two hours from the current moment. Value: %s", updateEventDto.getEventDate()));
+                throw new ValidationRequestException(String.format("Field: eventDate. Error: the event cannot be " +
+                        "earlier than two hours from the current moment. Value: %s", updateEventDto.getEventDate()));
             } else {
                 event.setEventDate(updateEventDto.getEventDate());
             }
@@ -109,7 +115,8 @@ public class EventServiceImpl implements EventService{
                     event.setState(StateEvent.CANCELED);
                 }
             } else {
-                throw new ValidationRequestException(String.format("Only the owner can change the event id %s", eventId));
+                throw new ValidationRequestException(String.format("Only the owner can change the event id %s",
+                        eventId));
             }
         }
         updateDataEvent(updateEventDto, event);
@@ -119,37 +126,46 @@ public class EventServiceImpl implements EventService{
 
     @Override
     public List<EventFullDto> getEventsByUser(Long userId, Integer from, Integer size) {
-        User user = getUser(userId);
+        getUser(userId);
         List<EventFullDto> eventFullDtos = new ArrayList<>();
         Pageable pageParams = PageRequest.of(from / size, size);
-        eventRepository.findByInitiatorId(userId, pageParams).forEach(e -> eventFullDtos.add(eventMapper.toEventDto(e)));
+        eventRepository.findByInitiatorId(userId, pageParams)
+                .forEach(e -> eventFullDtos.add(eventMapper.toEventDto(e)));
         log.info("Список событий, созданных пользователем: {}", eventFullDtos);
         return eventFullDtos;
     }
 
     @Override
     public EventFullDto getEventByUserAndId(Long userId, Long eventId) {
-        User user = getUser(userId);
+        getUser(userId);
         Event event = getEvent(eventId);
         log.info("Событие id {} созданное пользователем: {}", eventId, userId);
         return eventMapper.toEventDto(event);
     }
 
     @Override
-    public List<EventFullDto> getEventsAdmin(List<Long> users, List<StateEvent> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {
+    public List<EventFullDto> getEventsAdmin(List<Long> users, List<StateEvent> states, List<Long> categories,
+                                             LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from,
+                                             Integer size) {
         Pageable pageParams = PageRequest.of(from / size, size);
         List<EventFullDto> eventFullDtos = new ArrayList<>();
-        Specification<Event> eventCriterias = EventCriteriaQuery.getFilterEventsAdmin(users, states, categories, rangeStart, rangeEnd);
-        eventRepository.findAll(eventCriterias, pageParams).getContent().forEach(e -> eventFullDtos.add(eventMapper.toEventDto(e)));
+        Specification<Event> eventCriterias = EventCriteriaQuery.getFilterEventsAdmin(users, states, categories,
+                rangeStart, rangeEnd);
+        eventRepository.findAll(eventCriterias,
+                pageParams).getContent().forEach(e -> eventFullDtos.add(eventMapper.toEventDto(e)));
         log.info("Выполнен поиск событий администратором по заданным критериям");
         return eventFullDtos;
     }
 
     @Override
-    public List<EventShortDto> getEventsWithParameters(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, SortParam sort, Integer from, Integer size, HttpServletRequest request) {
+    public List<EventShortDto> getEventsWithParameters(String text, List<Long> categories, Boolean paid,
+                                                       LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                       Boolean onlyAvailable, SortParam sort, Integer from,
+                                                       Integer size, HttpServletRequest request) {
         Pageable pageParams = PageRequest.of(from / size, size);
         List<EventShortDto> eventShortDtos = new ArrayList<>();
-        Specification<Event> eventCriterias = EventCriteriaQuery.getFilterEventsPublic(text, categories, paid, rangeStart, rangeEnd, sort, StateEvent.PUBLISHED, onlyAvailable);
+        Specification<Event> eventCriterias = EventCriteriaQuery.getFilterEventsPublic(text, categories, paid,
+                rangeStart, rangeEnd, sort, StateEvent.PUBLISHED, onlyAvailable);
         Page<Event> eventsPage = eventRepository.findAll(eventCriterias, pageParams);
         List<Event> events = eventsPage.getContent();
         for (Event event : events) {
@@ -157,6 +173,7 @@ public class EventServiceImpl implements EventService{
             eventRepository.save(event);
             eventShortDtos.add(eventMapper.toEventShortDto(event));
         }
+        statsClient.createHit(statsMapper.toHitCreateDto(request));
         log.info("Результат поиска событий по заданным критериям: {}", eventShortDtos);
         return eventShortDtos;
     }
@@ -169,6 +186,8 @@ public class EventServiceImpl implements EventService{
         }
         event.setViews(event.getViews() + 1);
         eventRepository.save(event);
+        statsClient.createHit(statsMapper.toHitCreateDto(request));
+        log.info("Результат поиска события по id: {}", event);
         return eventMapper.toEventDto(event);
     }
 

@@ -12,7 +12,9 @@ import java.util.List;
 
 public class EventCriteriaQuery {
 
-    public static Specification<Event> getFilterEventsAdmin(List<Long> users, List<StateEvent> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd) {
+    public static Specification<Event> getFilterEventsAdmin(List<Long> users, List<StateEvent> states,
+                                                            List<Long> categories, LocalDateTime rangeStart,
+                                                            LocalDateTime rangeEnd) {
         return (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (users != null) {
@@ -34,12 +36,17 @@ public class EventCriteriaQuery {
         };
     }
 
-    public static Specification<Event> getFilterEventsPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, SortParam sort, StateEvent stateEvent, Boolean onlyAvailable) {
+    public static Specification<Event> getFilterEventsPublic(String text, List<Long> categories, Boolean paid,
+                                                             LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                             SortParam sort, StateEvent stateEvent,
+                                                             Boolean onlyAvailable) {
         return (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (text != null) {
-                predicates.add(criteriaBuilder.or(criteriaBuilder.like(criteriaBuilder.lower(root.get("annotation")), "%" + text.toLowerCase() + "%"),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), "%" + text.toLowerCase() + "%")));
+                predicates.add(criteriaBuilder.or(criteriaBuilder.like(criteriaBuilder.lower(root.get("annotation")),
+                                "%" + text.toLowerCase() + "%"),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("description")),
+                                "%" + text.toLowerCase() + "%")));
             }
             if (categories != null) {
                 predicates.add(root.get("category").get("id").in(categories));

@@ -1,7 +1,5 @@
 package ru.practicum.event.mapper;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.springframework.stereotype.Service;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
@@ -10,12 +8,9 @@ import ru.practicum.event.model.Event;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Service
 public class EventMapper {
-
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public Event toEvent(@NotNull NewEventDto newEventDto) {
         Event event = new Event();

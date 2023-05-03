@@ -28,8 +28,12 @@ public class EventAdminController {
     public List<EventFullDto> getEventsAdmin(@RequestParam(name = "users", required = false) List<Long> users,
                                         @RequestParam(name = "states", required = false) List<StateEvent> states,
                                         @RequestParam(name = "categories", required = false) List<Long> categories,
-                                        @RequestParam(name = "rangeStart", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
-                                        @RequestParam(name = "rangeEnd", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
+                                        @RequestParam(name = "rangeStart",
+                                                required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                                 LocalDateTime rangeStart,
+                                        @RequestParam(name = "rangeEnd",
+                                                required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                                 LocalDateTime rangeEnd,
                                         @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                         @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
         log.info("Получен GET-запрос на вывод событий с параметрами");
