@@ -21,6 +21,7 @@ import ru.practicum.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -56,7 +57,8 @@ public class RequestServiceImpl implements RequestService {
         request.setStatus(event.getRequestModeration() ? StatusRequest.PENDING : StatusRequest.CONFIRMED);
         request.setCreated(LocalDateTime.now());
         log.info("Пользователем {} создана заявка на участие в событии: {}", userId, eventId);
-        return requestMapper.toRequestDto(requestRepository.save(request));
+        RequestDto requestDto = requestMapper.toRequestDto(requestRepository.save(request));
+        return requestDto;
     }
 
     @Override
@@ -83,6 +85,9 @@ public class RequestServiceImpl implements RequestService {
         List<RequestDto> confirmedRequests = new ArrayList<>();
         List<RequestDto> rejectedRequests = new ArrayList<>();
         List<Request> requests = requestRepository.findByEventIdAndStatus(eventId, StatusRequest.PENDING);
+        if (requests.size() == 0) {
+            throw new ValidationRequestException("Request must have status PENDING.");
+        }
         if (eventRequestStatusUpdateRequestDto.getStatus().equals(StatusRequest.REJECTED)) {
             for (Request request : requests) {
                 if (request.getStatus().equals(StatusRequest.CONFIRMED)) {
@@ -93,10 +98,10 @@ public class RequestServiceImpl implements RequestService {
                 rejectedRequests.add(requestMapper.toRequestDto(request));
             }
         }
-        if ((eventRequestStatusUpdateRequestDto.getStatus().equals(StatusRequest.CONFIRMED)) &&
-                (event.getConfirmedRequests() >= event.getParticipantLimit())) {
-            throw new ValidationRequestException("Participation limit exceeded.");
-        } else {
+        if (eventRequestStatusUpdateRequestDto.getStatus().equals(StatusRequest.CONFIRMED)) {
+            if (Objects.equals(Long.valueOf(event.getParticipantLimit()), event.getConfirmedRequests())) {
+                throw new ValidationRequestException("Participation limit exceeded.");
+            }
             for (Request request : requests) {
                 if (event.getParticipantLimit() > event.getConfirmedRequests()) {
                     event.setConfirmedRequests(event.getConfirmedRequests() + 1);
