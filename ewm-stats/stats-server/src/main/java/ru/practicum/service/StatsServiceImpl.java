@@ -24,27 +24,20 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
-    public List<HitDtoOutput> getStats(String start, String end, List<String> uris, Boolean unique) {
-        LocalDateTime startDateTime = getDateFromString(start);
-        LocalDateTime endDateTime = getDateFromString(end);
+    public List<HitDtoOutput> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         if (unique) {
             if (uris == null || uris.isEmpty()) {
-                return statsRepository.getHitsWithUniqueIpAndAllUris(startDateTime, endDateTime);
+                return statsRepository.getHitsWithUniqueIpAndAllUris(start, end);
             } else {
-                return statsRepository.getHitsWithUniqueIp(startDateTime, endDateTime, uris);
+                return statsRepository.getHitsWithUniqueIp(start, end, uris);
             }
         } else {
             if (uris == null || uris.isEmpty()) {
-                return statsRepository.getHitsAllUris(startDateTime, endDateTime);
+                return statsRepository.getHitsAllUris(start, end);
             } else {
-                return statsRepository.getHits(startDateTime, endDateTime, uris);
+                return statsRepository.getHits(start, end, uris);
             }
         }
-    }
-
-    private LocalDateTime getDateFromString(String date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        return LocalDateTime.parse(date, formatter);
     }
 
 }
