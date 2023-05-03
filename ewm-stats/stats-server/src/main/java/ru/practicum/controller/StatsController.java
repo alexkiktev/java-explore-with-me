@@ -2,6 +2,7 @@ package ru.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.HitDtoInput;
 import ru.practicum.dto.HitDtoOutput;
@@ -18,6 +19,7 @@ public class StatsController {
     private final StatsService statsService;
 
     @PostMapping("/hit")
+    @ResponseStatus(HttpStatus.CREATED)
     public void createHit(@RequestBody @Valid HitDtoInput hitDtoInput) {
         log.info("К эндпоинту был запрос {}", hitDtoInput);
         statsService.createHit(hitDtoInput);
