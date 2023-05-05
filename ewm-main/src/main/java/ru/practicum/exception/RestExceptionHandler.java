@@ -15,7 +15,7 @@ import java.util.Objects;
 @RestControllerAdvice
 public class RestExceptionHandler {
 
-    private final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -24,7 +24,7 @@ public class RestExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .reason("Incorrectly made request.")
                 .message(Objects.requireNonNull(ex.getBindingResult().getFieldError()).getDefaultMessage())
-                .timestamp(LocalDateTime.now().format(FORMATTER))
+                .timestamp(LocalDateTime.now().format(DATE_FORMATTER))
                 .build();
     }
 
@@ -36,7 +36,7 @@ public class RestExceptionHandler {
                 .reason("Incorrectly made request.")
                 .message("In one of the fields, the text is of incorrect length. " +
                         Objects.requireNonNull(ex.getMessage()))
-                .timestamp(LocalDateTime.now().format(FORMATTER))
+                .timestamp(LocalDateTime.now().format(DATE_FORMATTER))
                 .build();
     }
 
@@ -47,7 +47,7 @@ public class RestExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .reason("Incorrectly made request.")
                 .message(ex.getMessage())
-                .timestamp(LocalDateTime.now().format(FORMATTER))
+                .timestamp(LocalDateTime.now().format(DATE_FORMATTER))
                 .build();
     }
 
@@ -58,7 +58,7 @@ public class RestExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .reason("The required object was not found.")
                 .message(ex.getMessage())
-                .timestamp(LocalDateTime.now().format(FORMATTER))
+                .timestamp(LocalDateTime.now().format(DATE_FORMATTER))
                 .build();
     }
 
@@ -69,7 +69,7 @@ public class RestExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .reason("Integrity constraint has been violated.")
                 .message(ex.getMessage() + "; " + ex.getCause().getMessage())
-                .timestamp(LocalDateTime.now().format(FORMATTER))
+                .timestamp(LocalDateTime.now().format(DATE_FORMATTER))
                 .build();
     }
 
@@ -80,7 +80,7 @@ public class RestExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .reason("For the requested operation the conditions are not met.")
                 .message(ex.getMessage())
-                .timestamp(LocalDateTime.now().format(FORMATTER))
+                .timestamp(LocalDateTime.now().format(DATE_FORMATTER))
                 .build();
     }
 
