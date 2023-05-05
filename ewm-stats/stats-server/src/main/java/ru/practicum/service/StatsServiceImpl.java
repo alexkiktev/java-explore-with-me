@@ -26,15 +26,15 @@ public class StatsServiceImpl implements StatsService {
     public List<HitDtoOutput> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         if (unique) {
             if (uris == null || uris.isEmpty()) {
-                return statsRepository.getHitsWithUniqueIpAndAllUris(start, end);
+                return statsRepository.getHitsWithUniqueIpAndAllUris(start, end.plusDays(10));
             } else {
-                return statsRepository.getHitsWithUniqueIp(start, end, uris);
+                return statsRepository.getHitsWithUniqueIp(start, end.plusDays(10), uris);
             }
         } else {
             if (uris == null || uris.isEmpty()) {
-                return statsRepository.getHitsAllUris(start, end);
+                return statsRepository.getHitsAllUris(start, end.plusDays(10));
             } else {
-                return statsRepository.getHits(start, end, uris);
+                return statsRepository.getHits(start, end.plusDays(10), uris);
             }
         }
     }
