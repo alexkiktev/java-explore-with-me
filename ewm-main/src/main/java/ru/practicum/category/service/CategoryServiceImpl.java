@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.category.mapper.CategoryMapper;
@@ -17,6 +19,7 @@ import java.util.Optional;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(isolation = Isolation.SERIALIZABLE)
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;

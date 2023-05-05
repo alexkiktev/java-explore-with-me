@@ -3,6 +3,8 @@ package ru.practicum.request.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.StateEvent;
 import ru.practicum.event.repository.EventRepository;
@@ -26,6 +28,7 @@ import java.util.Objects;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(isolation = Isolation.SERIALIZABLE)
 public class RequestServiceImpl implements RequestService {
 
     private final RequestRepository requestRepository;

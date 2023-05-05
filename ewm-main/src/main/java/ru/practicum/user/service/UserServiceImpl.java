@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.user.dto.UserDto;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.user.mapper.UserMapper;
@@ -16,6 +18,7 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(isolation = Isolation.SERIALIZABLE)
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
