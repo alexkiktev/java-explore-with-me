@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.category.mapper.CategoryMapper;
@@ -23,40 +24,45 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryMapper categoryMapper;
 
     @Override
+    @Transactional
     public CategoryDto createCategory(CategoryDto categoryDto) {
         CategoryDto createdCategoryDto = categoryMapper.toCategoryDto(categoryRepository
                 .save(categoryMapper.toCategory(categoryDto)));
-        log.info("Создана категория {}", createdCategoryDto);
+        log.info("Created category {}", createdCategoryDto);
         return createdCategoryDto;
     }
 
     @Override
-    public CategoryDto updateCategory(CategoryDto categoryDto, Long catId) {
-        Category updatedCategory = getCategoryById(catId);
+    @Transactional
+    public CategoryDto updateCategory(CategoryDto categoryDto, Long categoryId) {
+        Category updatedCategory = getCategoryById(categoryId);
         Optional.ofNullable(categoryDto.getName()).ifPresent(updatedCategory::setName);
-        log.info("Обновлена категория id {}: новое имя {}", catId, updatedCategory.getName());
+        log.info("Updated category id {}: new name is {}", categoryId, updatedCategory.getName());
         return categoryMapper.toCategoryDto(categoryRepository.save(updatedCategory));
     }
 
     @Override
-    public void deleteCategory(Long catId) {
-        Category deletedCategory = getCategoryById(catId);
-        categoryRepository.deleteById(catId);
-        log.info("Удалена категория {}", deletedCategory);
+    @Transactional
+    public void deleteCategory(Long categoryId) {
+        Category deletedCategory = getCategoryById(categoryId);
+        categoryRepository.deleteById(categoryId);
+        log.info("Removed category {}", deletedCategory);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CategoryDto> getCategories(Integer from, Integer size) {
         List<CategoryDto> categoryDtos = new ArrayList<>();
         categoryRepository.findAll(PageRequest.of(from / size, size))
                 .forEach(c -> categoryDtos.add(categoryMapper.toCategoryDto(c)));
-        log.info("Получен список категорий " + categoryDtos);
+        log.info("Received a list of categories " + categoryDtos);
         return categoryDtos;
     }
 
     @Override
-    public CategoryDto getCategory(long catId) {
-        return categoryMapper.toCategoryDto(getCategoryById(catId));
+    @Transactional(readOnly = true)
+    public CategoryDto getCategory(Long categoryId) {
+        return categoryMapper.toCategoryDto(getCategoryById(categoryId));
     }
 
     private Category getCategoryById(Long id) {

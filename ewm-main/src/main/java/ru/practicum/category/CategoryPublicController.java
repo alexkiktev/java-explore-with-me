@@ -12,7 +12,6 @@ import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
-@Slf4j
 @RequestMapping("/categories")
 @RequiredArgsConstructor
 public class CategoryPublicController {
@@ -28,8 +27,8 @@ public class CategoryPublicController {
     }
 
     @GetMapping("/{catId}")
-    public CategoryDto getCategory(@PathVariable long catId) {
-        return categoryService.getCategory(catId);
+    public CategoryDto getCategory(@PathVariable Long categoryId) {
+        return categoryService.getCategory(categoryId);
     }
 
 }

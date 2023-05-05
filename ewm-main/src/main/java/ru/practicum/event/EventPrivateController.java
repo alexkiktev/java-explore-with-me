@@ -32,7 +32,7 @@ public class EventPrivateController {
     @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto createEvent(@PathVariable Long userId,
                                     @Valid @RequestBody NewEventDto newEventDto) {
-        log.info("Получен POST-запрос на создание события {}", newEventDto);
+        log.info("Received a POST request to create an event {}", newEventDto);
         return eventService.createEvent(userId, newEventDto);
     }
 
@@ -41,7 +41,7 @@ public class EventPrivateController {
     public EventFullDto updateEventByUser(@PathVariable Long userId,
                                           @PathVariable Long eventId,
                                           @Valid @NotNull @RequestBody UpdateEventDto updateEventDto) {
-        log.info("Получен PATCH-запрос на изменение события, добавленного текущим пользователем {}", updateEventDto);
+        log.info("Received a PATCH request to change an event added by the current user {}", updateEventDto);
         return eventService.updateEventByUser(userId, eventId, updateEventDto);
     }
 
@@ -51,7 +51,8 @@ public class EventPrivateController {
                                                                   @PathVariable Long eventId,
                                                                   @RequestBody EventRequestStatusUpdateRequestDto
                                                                               eventRequestStatusUpdateRequestDto) {
-        log.info("Получен PATCH-запрос на изменение статусов заявок на участие в событии {}", eventId);
+        log.info("Received a PATCH request to change the statuses of applications for participation in the event {}",
+                eventId);
         return requestService.updateRequestsStatus(userId, eventId, eventRequestStatusUpdateRequestDto);
     }
 
@@ -62,7 +63,7 @@ public class EventPrivateController {
                                                       defaultValue = "0") Integer from,
                                               @Positive @RequestParam(name = "size",
                                                       defaultValue = "10") Integer size) {
-        log.info("Получен GET-запрос событий, добавленных текущим пользователем {}", userId);
+        log.info("Received a GET request for events added by the current user {}", userId);
         return eventService.getEventsByUser(userId, from, size);
     }
 
@@ -70,7 +71,7 @@ public class EventPrivateController {
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto getEventByUserAndId(@PathVariable Long userId,
                                        @PathVariable Long eventId) {
-        log.info("Получен GET-запрос события id {} от пользователя {}", userId, eventId);
+        log.info("Received a GET request for the id {} event from the user {}", userId, eventId);
         return eventService.getEventByUserAndId(userId, eventId);
     }
 
@@ -78,7 +79,7 @@ public class EventPrivateController {
     @ResponseStatus(HttpStatus.OK)
     public List<RequestDto> getRequestsForUserEvent(@PathVariable Long userId,
                                                     @PathVariable Long eventId) {
-        log.info("Получен GET-запрос заявок на участие в событии id {} пользователя {}", eventId, userId);
+        log.info("Received a GET request for applications to participate in the user id {} event {}", eventId, userId);
         return requestService.getRequestsForUserEvent(userId, eventId);
     }
 

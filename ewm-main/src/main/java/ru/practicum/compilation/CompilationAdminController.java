@@ -22,23 +22,24 @@ public class CompilationAdminController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CompilationDto createCompilation(@Valid @RequestBody CompilationNewDto compilationNewDto) {
-        log.info("Получен POST-запрос на создание подборки событий {}", compilationNewDto);
+        log.info("Received a POST request to create a collection of events {}", compilationNewDto);
         return compilationService.createCompilation(compilationNewDto);
     }
 
     @PatchMapping("/{compId}")
     @ResponseStatus(HttpStatus.OK)
-    public CompilationDto updateCompilation(@PathVariable Long compId,
+    public CompilationDto updateCompilation(@PathVariable Long compilationId,
                                             @RequestBody CompilationUpdateDto compilationUpdateDto) {
-        log.info("Получен PATCH-запрос на обновление информации о подборке id {}: {}", compId, compilationUpdateDto);
-        return compilationService.updateCompilation(compId, compilationUpdateDto);
+        log.info("Received a PATCH request to update information about the collection id {}: {}", compilationId,
+                compilationUpdateDto);
+        return compilationService.updateCompilation(compilationId, compilationUpdateDto);
     }
 
     @DeleteMapping("/{compId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCompilation(@PathVariable Long compId) {
-        log.info("Получен DELETE-запрос на удаление подборки id {}", compId);
-        compilationService.deleteCompilation(compId);
+    public void deleteCompilation(@PathVariable Long compilationId) {
+        log.info("A DELETE request was received to delete the collection id {}", compilationId);
+        compilationService.deleteCompilation(compilationId);
     }
 
 }

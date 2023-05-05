@@ -21,7 +21,8 @@ public class RequestPrivateController {
     @ResponseStatus(HttpStatus.CREATED)
     public RequestDto createRequest(@PathVariable Long userId,
                                     @RequestParam(name = "eventId") Long eventId) {
-        log.info("Получен POST-запрос на создание заявки на участие в событии {} от пользователя {}", userId, eventId);
+        log.info("Received a POST request to create an application for participation in the event {} from the user {}",
+                userId, eventId);
         return requestService.createRequest(userId, eventId);
     }
 
@@ -29,14 +30,14 @@ public class RequestPrivateController {
     @ResponseStatus(HttpStatus.OK)
     public RequestDto cancelRequest(@PathVariable Long userId,
                                     @PathVariable Long requestId) {
-        log.info("Получен PATCH-запрос на отмену заявки {} от пользователя {}", userId, requestId);
+        log.info("Received a PATCH request to cancel the request {} from the user {}", userId, requestId);
         return requestService.cancelRequest(userId, requestId);
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<RequestDto> getRequestsByUser(@PathVariable Long userId) {
-        log.info("Получен GET-запрос на просмотр всех заявок пользователя {}", userId);
+        log.info("A GET request was received to view all user requests {}", userId);
         return requestService.getRequestsByUser(userId);
     }
 

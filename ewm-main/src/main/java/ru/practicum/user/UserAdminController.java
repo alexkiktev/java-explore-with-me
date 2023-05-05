@@ -23,7 +23,7 @@ public class UserAdminController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto createUser(@RequestBody @Valid UserDto userDto) {
-        log.info("Получен POST-запрос на создание пользователя {}", userDto);
+        log.info("Received a POST request to create a user {}", userDto);
         return userService.createUser(userDto);
     }
 
@@ -32,14 +32,14 @@ public class UserAdminController {
     public List<UserDto> getUsers(@RequestParam(name = "ids", required = false) List<Long> ids,
                                   @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                   @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
-        log.info("Получен GET-запрос на вывод пользователей с параметрами");
+        log.info("A GET request was received to output users with parameters");
         return userService.getUsers(ids, from, size);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
-        log.info("Получен DELETE-запрос на удаление пользователя id {}", id);
+        log.info("A DELETE request was received to delete the user id {}", id);
         userService.deleteUser(id);
     }
 

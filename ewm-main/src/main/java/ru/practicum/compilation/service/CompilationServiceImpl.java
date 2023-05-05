@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.dto.CompilationNewDto;
 import ru.practicum.compilation.dto.CompilationUpdateDto;
@@ -30,6 +31,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationMapper compilationMapper;
 
     @Override
+    @Transactional
     public CompilationDto createCompilation(CompilationNewDto compilationNewDto) {
         if (compilationNewDto.getEvents() == null) {
             compilationNewDto.setEvents(new ArrayList<>());
@@ -40,41 +42,46 @@ public class CompilationServiceImpl implements CompilationService {
         }
         CompilationDto compilationDto = compilationMapper
                 .toCompilationDto(compilationRepository.save(compilationMapper.toCompilation(compilationNewDto)));
-        log.info("Создана подборка {}", compilationDto);
+        log.info("Created compilation {}", compilationDto);
         return compilationDto;
     }
 
     @Override
-    public CompilationDto updateCompilation(Long compId, CompilationUpdateDto compilationUpdateDto) {
-        Compilation updatedCompilation = getCompilation(compId);
+    @Transactional
+    public CompilationDto updateCompilation(Long compilationId, CompilationUpdateDto compilationUpdateDto) {
+        Compilation updatedCompilation = getCompilation(compilationId);
         Optional.ofNullable(compilationUpdateDto.getTitle()).ifPresent(updatedCompilation::setTitle);
         Optional.ofNullable(compilationUpdateDto.getPinned()).ifPresent(updatedCompilation::setPinned);
         if (compilationUpdateDto.getEvents() != null) {
             List<Event> events = eventRepository.findAllByIdIn(compilationUpdateDto.getEvents());
             updatedCompilation.setEvents(events);
         }
-        log.info("Обновлена подборка id {}: новые данные {}", compId, updatedCompilation);
+        log.info("Updated compilation id {}: new data is {}", compilationId, updatedCompilation);
         return compilationMapper.toCompilationDto(compilationRepository.save(updatedCompilation));
     }
 
     @Override
-    public void deleteCompilation(Long compId) {
-        getCompilation(compId);
-        compilationRepository.deleteById(compId);
-        log.info("Удалена подборка id {}", compId);
+    @Transactional
+    public void deleteCompilation(Long compilationId) {
+        getCompilation(compilationId);
+        compilationRepository.deleteById(compilationId);
+        log.info("Removed compilation id {}", compilationId);
     }
 
     @Override
-    public CompilationDto getCompilationById(Long compId) {
-        return compilationMapper.toCompilationDto(getCompilation(compId));
+    @Transactional(readOnly = true)
+    public CompilationDto getCompilationById(Long compilationId) {
+        return compilationMapper.toCompilationDto(getCompilation(compilationId));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
         List<CompilationDto> compilationDtos = new ArrayList<>();
         Pageable pageParams = PageRequest.of(from / size, size);
         compilationRepository.findAllByPinnedIs(pinned, pageParams)
                 .forEach(c -> compilationDtos.add(compilationMapper.toCompilationDto(c)));
+        log.info("Received a list of compilations {}", compilationDtos);
         return compilationDtos;
     }
 

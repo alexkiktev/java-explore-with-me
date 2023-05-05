@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.StatsClient;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
@@ -41,109 +42,86 @@ public class EventServiceImpl implements EventService {
     private final StatsMapper statsMapper;
 
     @Override
-    public EventFullDto updateEventAdmin(Long eventId, UpdateEventDto updateEventDto) {
-        Event event = getEvent(eventId);
-        if (updateEventDto.getEventDate() != null) {
-            if (!updateEventDto.getEventDate().isAfter(LocalDateTime.now().plusHours(1))) {
-                throw new ValidationRequestException(String.format("Field: eventDate. Error: the event cannot be " +
-                        "earlier than one hours from the current moment. Value: %s", updateEventDto.getEventDate()));
-            } else {
-                event.setEventDate(updateEventDto.getEventDate());
-            }
-        }
-        if (updateEventDto.getStateAction() != null) {
-            if (updateEventDto.getStateAction().equals(StateAction.PUBLISH_EVENT)) {
-                if ((event.getState().equals(StateEvent.PUBLISHED)) || (event.getState().equals(StateEvent.CANCELED))) {
-                    throw new ValidationRequestException(String.format("Cannot publish the event because it's not in " +
-                            "the right state: %s", StateEvent.PUBLISHED));
-                }
-                event.setState(StateEvent.PUBLISHED);
-                event.setPublishedOn(LocalDateTime.now());
-                event.setViews(0L);
-            } else {
-                if (event.getState().equals(StateEvent.PUBLISHED)) {
-                    throw new ValidationRequestException(String.format("Cannot publish the event because it's not in " +
-                            "the right state: %s", StateEvent.PUBLISHED));
-                }
-                event.setState(StateEvent.CANCELED);
-            }
-        }
-        updateDataEvent(updateEventDto, event);
-        log.info("Администратором обновлено событие id {}: {}", eventId, event);
-        return eventMapper.toEventDto(eventRepository.save(event));
-    }
-
-    @Override
+    @Transactional
     public EventFullDto createEvent(Long userId, NewEventDto newEventDto) {
         if (!newEventDto.getEventDate().isAfter(LocalDateTime.now().plusHours(2))) {
             throw new ValidationRequestException(String.format("Field: eventDate. Error: the event cannot be earlier " +
                     "than two hours from the current moment. Value: %s", newEventDto.getEventDate()));
         }
-        Event event = eventMapper.toEvent(newEventDto);
-        event.setCategory(getCategory(newEventDto.getCategory()));
-        event.setState(StateEvent.PENDING);
-        User user = getUser(userId);
-        event.setInitiator(user);
-        event.setLocation(getOrCreateLocation(newEventDto.getLocation()));
-        event.setConfirmedRequests(0L);
-        log.info("Пользователем {} создано новое событие: {}", userId, event);
+        Event event = createDataEvent(newEventDto, userId);
+        log.info("User id {} has created new event: {}", userId, event);
         return eventMapper.toEventDto(eventRepository.save(event));
     }
 
     @Override
-    public EventFullDto updateEventByUser(Long userId, Long eventId, UpdateEventDto updateEventDto) {
+    @Transactional
+    public EventFullDto updateEventAdmin(Long eventId, UpdateEventDto updateEventDto) {
         Event event = getEvent(eventId);
-        if (!event.getInitiator().getId().equals(userId)) {
-            throw new ValidationRequestException(String.format("Only the owner can change the event id %s", eventId));
-        }
-        if (event.getState().equals(StateEvent.PUBLISHED)) {
-            throw new ValidationRequestException("Event must not be published");
-        }
-        if (updateEventDto.getEventDate() != null) {
-            if (!updateEventDto.getEventDate().isAfter(LocalDateTime.now().plusHours(2))) {
-                throw new ValidationRequestException(String.format("Field: eventDate. Error: the event cannot be " +
-                        "earlier than two hours from the current moment. Value: %s", updateEventDto.getEventDate()));
+        checkTimeEvent(updateEventDto, 1);
+        event.setEventDate(updateEventDto.getEventDate());
+        if (updateEventDto.getStateAction() != null) {
+            if (updateEventDto.getStateAction().equals(StateAction.PUBLISH_EVENT)) {
+                checkStateEvent(event);
+                event.setState(StateEvent.PUBLISHED);
+                event.setPublishedOn(LocalDateTime.now());
+                event.setViews(0L);
             } else {
-                event.setEventDate(updateEventDto.getEventDate());
+                checkStateEvent(event);
+                event.setState(StateEvent.CANCELED);
             }
         }
+        updateDataEvent(updateEventDto, event);
+        log.info("Admin has updated the event id {}: new data {}", eventId, event);
+        return eventMapper.toEventDto(eventRepository.save(event));
+    }
+
+    @Override
+    @Transactional
+    public EventFullDto updateEventByUser(Long userId, Long eventId, UpdateEventDto updateEventDto) {
+        Event event = getEvent(eventId);
+        checkEventOwner(event, userId);
+        checkStateEvent(event);
+        checkTimeEvent(updateEventDto, 2);
+        event.setEventDate(updateEventDto.getEventDate());
         if (updateEventDto.getStateAction() != null) {
-            if ((event.getState().equals(StateEvent.CANCELED)) || (event.getState().equals(StateEvent.PENDING))) {
+            if ((event.getState().equals(StateEvent.PENDING)) || (event.getState().equals(StateEvent.CANCELED))) {
                 if (updateEventDto.getStateAction().equals(StateAction.SEND_TO_REVIEW)) {
                     event.setState(StateEvent.PENDING);
                 } else {
                     event.setState(StateEvent.CANCELED);
                 }
             } else {
-                throw new ValidationRequestException(String.format("Only the owner can change the event id %s",
-                        eventId));
+                throw new ValidationRequestException("Only pending or canceled events can be changed");
             }
         }
         updateDataEvent(updateEventDto, event);
-        log.info("Пользователем {} обновлено событие id {}: {}", userId, eventId, event);
+        log.info("User id {} has updated event id {}: {}", userId, eventId, event);
         return eventMapper.toEventDto(eventRepository.save(event));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventFullDto> getEventsByUser(Long userId, Integer from, Integer size) {
         getUser(userId);
         List<EventFullDto> eventFullDtos = new ArrayList<>();
         Pageable pageParams = PageRequest.of(from / size, size);
         eventRepository.findByInitiatorId(userId, pageParams)
                 .forEach(e -> eventFullDtos.add(eventMapper.toEventDto(e)));
-        log.info("Список событий, созданных пользователем: {}", eventFullDtos);
+        log.info("List of events created by the user: {}", eventFullDtos);
         return eventFullDtos;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EventFullDto getEventByUserAndId(Long userId, Long eventId) {
         getUser(userId);
         Event event = getEvent(eventId);
-        log.info("Событие id {} созданное пользователем: {}", eventId, userId);
+        log.info("Received event id {} created by the user id: {}", eventId, userId);
         return eventMapper.toEventDto(event);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventFullDto> getEventsAdmin(List<Long> users, List<StateEvent> states, List<Long> categories,
                                              LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from,
                                              Integer size) {
@@ -153,11 +131,12 @@ public class EventServiceImpl implements EventService {
                 rangeStart, rangeEnd);
         eventRepository.findAll(eventCriterias,
                 pageParams).getContent().forEach(e -> eventFullDtos.add(eventMapper.toEventDto(e)));
-        log.info("Выполнен поиск событий администратором по заданным критериям");
+        log.info("The admin searched for events according to the specified criteria");
         return eventFullDtos;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventShortDto> getEventsWithParameters(String text, List<Long> categories, Boolean paid,
                                                        LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                        Boolean onlyAvailable, SortParam sort, Integer from,
@@ -174,11 +153,12 @@ public class EventServiceImpl implements EventService {
             eventShortDtos.add(eventMapper.toEventShortDto(event));
         }
         statsClient.createHit(statsMapper.toHitCreateDto(request));
-        log.info("Результат поиска событий по заданным критериям: {}", eventShortDtos);
+        log.info("The result of the event search by the specified criteria: {}", eventShortDtos);
         return eventShortDtos;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EventFullDto getEventByIdPublic(Long id, HttpServletRequest request) {
         Event event = eventRepository.findEventByIdAndState(id, StateEvent.PUBLISHED);
         if (event == null) {
@@ -187,7 +167,7 @@ public class EventServiceImpl implements EventService {
         event.setViews(event.getViews() + 1);
         eventRepository.save(event);
         statsClient.createHit(statsMapper.toHitCreateDto(request));
-        log.info("Результат поиска события по id: {}", event);
+        log.info("Event search result by id: {}", event);
         return eventMapper.toEventDto(event);
     }
 
@@ -229,7 +209,38 @@ public class EventServiceImpl implements EventService {
         Optional.ofNullable(updateEventDto.getPaid()).ifPresent(event::setPaid);
         Optional.ofNullable(updateEventDto.getParticipantLimit()).ifPresent(event::setParticipantLimit);
         Optional.ofNullable(updateEventDto.getRequestModeration()).ifPresent(event::setRequestModeration);
-        Optional.ofNullable(updateEventDto.getTitle()).ifPresent(event::setTitle);
+    }
+
+    private Event createDataEvent(NewEventDto newEventDto, Long userId) {
+        Event event = eventMapper.toEvent(newEventDto);
+        event.setCategory(getCategory(newEventDto.getCategory()));
+        event.setState(StateEvent.PENDING);
+        User user = getUser(userId);
+        event.setInitiator(user);
+        event.setLocation(getOrCreateLocation(newEventDto.getLocation()));
+        event.setConfirmedRequests(0L);
+        return event;
+    }
+
+    private void checkTimeEvent(UpdateEventDto updateEventDto, Integer countHours) {
+        if (!updateEventDto.getEventDate().isAfter(LocalDateTime.now().plusHours(countHours))) {
+            throw new ValidationRequestException(String.format("Field: eventDate. Error: the event cannot be " +
+                    "earlier than one hours from the current moment. Value: %s", updateEventDto.getEventDate()));
+        }
+    }
+
+    private void checkEventOwner(Event event, Long userId) {
+        if (!event.getInitiator().getId().equals(userId)) {
+            throw new ValidationRequestException(String.format("Only the owner can change the event id %s",
+                    event.getId()));
+        }
+    }
+
+    private void checkStateEvent(Event event) {
+        if ((event.getState().equals(StateEvent.PUBLISHED)) || (event.getState().equals(StateEvent.CANCELED))) {
+            throw new ValidationRequestException(String.format("Cannot publish the event because it's not in " +
+                    "the right state: %s", event.getState()));
+        }
     }
 
 }

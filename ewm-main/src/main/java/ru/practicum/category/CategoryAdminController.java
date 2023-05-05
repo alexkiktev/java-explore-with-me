@@ -20,22 +20,22 @@ public class CategoryAdminController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryDto createCategory(@RequestBody @Valid CategoryDto categoryDto) {
-        log.info("Получен POST-запрос на создание категории {}", categoryDto);
+        log.info("Received a POST request to create a category {}", categoryDto);
         return categoryService.createCategory(categoryDto);
     }
 
     @PatchMapping("/{catId}")
     @ResponseStatus(HttpStatus.OK)
-    public CategoryDto updateCategory(@RequestBody @Valid CategoryDto categoryDto, @PathVariable Long catId) {
-        log.info("Получен PATCH-запрос на изменение категории {}: {}", catId, categoryDto);
-        return categoryService.updateCategory(categoryDto, catId);
+    public CategoryDto updateCategory(@RequestBody @Valid CategoryDto categoryDto, @PathVariable Long categoryId) {
+        log.info("Received a PATCH request to change the category {}: {}", categoryId, categoryDto);
+        return categoryService.updateCategory(categoryDto, categoryId);
     }
 
     @DeleteMapping("/{catId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCategory(@PathVariable Long catId) {
-        log.info("Получен DELETE-запрос на удаление категории id {}", catId);
-        categoryService.deleteCategory(catId);
+    public void deleteCategory(@PathVariable Long categoryId) {
+        log.info("Received a DELETE request to delete a category id {}", categoryId);
+        categoryService.deleteCategory(categoryId);
     }
 
 }

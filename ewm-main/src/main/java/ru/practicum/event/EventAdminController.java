@@ -36,7 +36,7 @@ public class EventAdminController {
                                                  LocalDateTime rangeEnd,
                                         @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                         @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
-        log.info("Получен GET-запрос на вывод событий с параметрами");
+        log.info("Received a GET request to output events with parameters");
         return eventService.getEventsAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
@@ -44,7 +44,7 @@ public class EventAdminController {
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto updateEventAdmin(@PathVariable(name = "eventId") Long eventId,
                                     @RequestBody UpdateEventDto updateEventDto) {
-        log.info("Получен PATCH-запрос на обновление события {}: {}", eventId, updateEventDto);
+        log.info("Received a PATCH request to update the event {}: {}", eventId, updateEventDto);
         return eventService.updateEventAdmin(eventId, updateEventDto);
     }
 

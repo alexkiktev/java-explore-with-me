@@ -43,7 +43,7 @@ public class EventPublicController {
                                                        defaultValue = "0") Integer from,
                                                @Positive @RequestParam(name = "size", defaultValue = "10") Integer size,
                                                HttpServletRequest request) {
-        log.info("Получен GET-запрос событий по параметрам");
+        log.info("Received a GET request for events by parameters");
         return eventService.getEventsWithParameters(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort,
                 from, size, request);
     }
@@ -51,7 +51,7 @@ public class EventPublicController {
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto getEventByIdPublic(@PathVariable Long id, HttpServletRequest request) {
-        log.info("Получен GET-запрос события id {}", id);
+        log.info("Event GET request received by id {}", id);
         return eventService.getEventByIdPublic(id, request);
     }
 

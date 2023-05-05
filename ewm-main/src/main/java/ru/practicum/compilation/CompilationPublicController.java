@@ -21,9 +21,9 @@ public class CompilationPublicController {
 
     @GetMapping("/{compId}")
     @ResponseStatus(HttpStatus.OK)
-    public CompilationDto getCompilationById(@PathVariable Long compId) {
-        log.info("Получен GET-запрос по id подборки {}", compId);
-        return compilationService.getCompilationById(compId);
+    public CompilationDto getCompilationById(@PathVariable Long compilationId) {
+        log.info("A GET request was received by the compilation id {}", compilationId);
+        return compilationService.getCompilationById(compilationId);
     }
 
     @GetMapping
@@ -33,7 +33,7 @@ public class CompilationPublicController {
                                                         defaultValue = "0") Integer from,
                                                 @Positive @RequestParam(name = "size",
                                                         defaultValue = "10") Integer size) {
-        log.info("Получен GET-запрос на получение всех подборок");
+        log.info("A GET request was received to get all the compilations");
         return compilationService.getCompilations(pinned, from, size);
     }
 

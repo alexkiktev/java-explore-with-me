@@ -3,6 +3,7 @@ package ru.practicum.request.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.StateEvent;
 import ru.practicum.event.repository.EventRepository;
@@ -34,23 +35,14 @@ public class RequestServiceImpl implements RequestService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public RequestDto createRequest(Long userId, Long eventId) {
         User user = getUser(userId);
         Event event = getEvent(eventId);
-        if (requestRepository.findByEventIdAndRequesterId(eventId, userId).isPresent()) {
-            throw new ValidationRequestException("Запрос на участие не был добавлен: нельзя добавить повторный запрос");
-        }
-        if (event.getInitiator().getId().equals(userId)) {
-            throw new ValidationRequestException("The initiator of the event cannot add a request to participate " +
-                    "in his event");
-        }
-        if (!event.getState().equals(StateEvent.PUBLISHED)) {
-            throw new ValidationRequestException("You cannot participate in an unpublished event.");
-        }
-        if (Objects.equals(Long.valueOf(event.getParticipantLimit()), event.getConfirmedRequests())) {
-            throw new ValidationRequestException(String.format("The limit of requests per event %s has been reached",
-                    event.getTitle()));
-        }
+        checkRequestIsExist(eventId, userId);
+        checkEventOwner(event, userId);
+        checkStatePublished(event);
+        checkParticipantLimit(event);
         Request request = new Request();
         request.setEvent(event);
         request.setRequester(user);
@@ -62,22 +54,24 @@ public class RequestServiceImpl implements RequestService {
             eventRepository.save(event);
         }
         request.setCreated(LocalDateTime.now());
-        log.info("Пользователем {} создана заявка на участие в событии: {}", userId, eventId);
+        log.info("User id {} has created a request to participate in the event id: {}", userId, eventId);
         return requestMapper.toRequestDto(requestRepository.save(request));
     }
 
     @Override
+    @Transactional
     public RequestDto cancelRequest(Long userId, Long requestId) {
         getUser(userId);
         Request request = getRequest(requestId);
         if (request.getRequester().getId().equals(userId)) {
             request.setStatus(StatusRequest.CANCELED);
         }
-        log.info("Отменена заявка id {}", requestId);
+        log.info("Сancelled request id {}", requestId);
         return requestMapper.toRequestDto(requestRepository.save(request));
     }
 
     @Override
+    @Transactional
     public EventRequestStatusUpdateResultDto updateRequestsStatus(Long userId, Long eventId,
                                                                   EventRequestStatusUpdateRequestDto
                                                                           eventRequestStatusUpdateRequestDto) {
@@ -95,9 +89,7 @@ public class RequestServiceImpl implements RequestService {
         }
         if (eventRequestStatusUpdateRequestDto.getStatus().equals(StatusRequest.REJECTED)) {
             for (Request request : requests) {
-                if (request.getStatus().equals(StatusRequest.CONFIRMED)) {
-                    throw new ValidationRequestException("An already accepted application cannot be canceled.");
-                }
+                checkStateConfirmed(request);
                 request.setStatus(StatusRequest.REJECTED);
                 requestRepository.save(request);
                 rejectedRequests.add(requestMapper.toRequestDto(request));
@@ -123,28 +115,30 @@ public class RequestServiceImpl implements RequestService {
         }
         eventRequestStatusUpdateResultDto.setConfirmedRequests(confirmedRequests);
         eventRequestStatusUpdateResultDto.setRejectedRequests(rejectedRequests);
-        log.info("Обновлен статус заявок {} для события id {}: ", eventRequestStatusUpdateRequestDto.getRequestIds(),
+        log.info("Updated the status of requests {} for the event id {}: ", eventRequestStatusUpdateRequestDto.getRequestIds(),
                 eventId);
         return eventRequestStatusUpdateResultDto;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<RequestDto> getRequestsByUser(Long userId) {
         getUser(userId);
         List<RequestDto> requestDtos = new ArrayList<>();
         requestRepository.findAllByRequesterId(userId).forEach(r -> requestDtos.add(requestMapper.toRequestDto(r)));
-        log.info("Список заявок пользователя id {}: {}", userId, requestDtos);
+        log.info("List of user id {} requests: {}", userId, requestDtos);
         return requestDtos;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<RequestDto> getRequestsForUserEvent(Long userId, Long eventId) {
         getUser(userId);
         Event event = getEvent(eventId);
         List<RequestDto> requestDtos = new ArrayList<>();
         if (event.getInitiator().getId().equals(userId)) {
             requestRepository.findByEventId(eventId).forEach(r -> requestDtos.add(requestMapper.toRequestDto(r)));
-            log.info("Список заявок на событие id {}: {}", eventId, requestDtos);
+            log.info("List of requests for the event id {}: {}", eventId, requestDtos);
         }
         return requestDtos;
     }
@@ -162,6 +156,39 @@ public class RequestServiceImpl implements RequestService {
     private Request getRequest(Long requestId) {
         return requestRepository.findById(requestId).orElseThrow(() ->
                 new NotFoundException(String.format("Request with id=%s was not found", requestId)));
+    }
+
+    private void checkRequestIsExist(Long eventId, Long userId) {
+        if (requestRepository.findByEventIdAndRequesterId(eventId, userId).isPresent()) {
+            throw new ValidationRequestException("The participation request was not added: " +
+                    "you cannot add a repeat request");
+        }
+    }
+
+    private void checkEventOwner(Event event, Long userId) {
+        if (event.getInitiator().getId().equals(userId)) {
+            throw new ValidationRequestException("The initiator of the event cannot add a request to participate " +
+                    "in his event");
+        }
+    }
+
+    private void checkParticipantLimit(Event event) {
+        if (Objects.equals(Long.valueOf(event.getParticipantLimit()), event.getConfirmedRequests())) {
+            throw new ValidationRequestException(String.format("The limit of requests per event %s has been reached",
+                    event.getTitle()));
+        }
+    }
+
+    private void checkStatePublished(Event event) {
+        if (!event.getState().equals(StateEvent.PUBLISHED)) {
+            throw new ValidationRequestException("You cannot participate in an unpublished event.");
+        }
+    }
+
+    private void checkStateConfirmed(Request request) {
+        if (request.getStatus().equals(StatusRequest.CONFIRMED)) {
+            throw new ValidationRequestException("An already accepted application cannot be canceled.");
+        }
     }
 
 }
