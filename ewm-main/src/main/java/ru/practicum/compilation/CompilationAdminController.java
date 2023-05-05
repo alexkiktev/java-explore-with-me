@@ -28,7 +28,7 @@ public class CompilationAdminController {
 
     @PatchMapping("/{compId}")
     @ResponseStatus(HttpStatus.OK)
-    public CompilationDto updateCompilation(@PathVariable Long compilationId,
+    public CompilationDto updateCompilation(@PathVariable(name = "compId") Long compilationId,
                                             @RequestBody CompilationUpdateDto compilationUpdateDto) {
         log.info("Received a PATCH request to update information about the collection id {}: {}", compilationId,
                 compilationUpdateDto);
@@ -37,7 +37,7 @@ public class CompilationAdminController {
 
     @DeleteMapping("/{compId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCompilation(@PathVariable Long compilationId) {
+    public void deleteCompilation(@PathVariable(name = "compId") Long compilationId) {
         log.info("A DELETE request was received to delete the collection id {}", compilationId);
         compilationService.deleteCompilation(compilationId);
     }

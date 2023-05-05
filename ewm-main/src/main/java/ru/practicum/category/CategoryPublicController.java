@@ -26,7 +26,7 @@ public class CategoryPublicController {
     }
 
     @GetMapping("/{catId}")
-    public CategoryDto getCategory(@PathVariable Long categoryId) {
+    public CategoryDto getCategory(@PathVariable(name = "catId") Long categoryId) {
         return categoryService.getCategory(categoryId);
     }
 

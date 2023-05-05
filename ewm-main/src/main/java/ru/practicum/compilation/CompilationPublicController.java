@@ -21,7 +21,7 @@ public class CompilationPublicController {
 
     @GetMapping("/{compId}")
     @ResponseStatus(HttpStatus.OK)
-    public CompilationDto getCompilationById(@PathVariable Long compilationId) {
+    public CompilationDto getCompilationById(@PathVariable(name = "compId") Long compilationId) {
         log.info("A GET request was received by the compilation id {}", compilationId);
         return compilationService.getCompilationById(compilationId);
     }

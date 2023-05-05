@@ -57,16 +57,18 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto updateEventAdmin(Long eventId, UpdateEventDto updateEventDto) {
         Event event = getEvent(eventId);
-        checkTimeEvent(updateEventDto, 1);
-        event.setEventDate(updateEventDto.getEventDate());
+        if (updateEventDto.getEventDate() != null) {
+            checkTimeEvent(updateEventDto, 1);
+            event.setEventDate(updateEventDto.getEventDate());
+        }
         if (updateEventDto.getStateAction() != null) {
             if (updateEventDto.getStateAction().equals(StateAction.PUBLISH_EVENT)) {
-                checkStateEvent(event);
+                checkStateEventIsPublishedOrCanceled(event);
                 event.setState(StateEvent.PUBLISHED);
                 event.setPublishedOn(LocalDateTime.now());
                 event.setViews(0L);
             } else {
-                checkStateEvent(event);
+                checkStateEventIsPublishedOrCanceled(event);
                 event.setState(StateEvent.CANCELED);
             }
         }
@@ -80,9 +82,11 @@ public class EventServiceImpl implements EventService {
     public EventFullDto updateEventByUser(Long userId, Long eventId, UpdateEventDto updateEventDto) {
         Event event = getEvent(eventId);
         checkEventOwner(event, userId);
-        checkStateEvent(event);
-        checkTimeEvent(updateEventDto, 2);
-        event.setEventDate(updateEventDto.getEventDate());
+        checkStateEventIsPublished(event);
+        if (updateEventDto.getEventDate() != null) {
+            checkTimeEvent(updateEventDto, 2);
+            event.setEventDate(updateEventDto.getEventDate());
+        }
         if (updateEventDto.getStateAction() != null) {
             if ((event.getState().equals(StateEvent.PENDING)) || (event.getState().equals(StateEvent.CANCELED))) {
                 if (updateEventDto.getStateAction().equals(StateAction.SEND_TO_REVIEW)) {
@@ -236,8 +240,15 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private void checkStateEvent(Event event) {
+    private void checkStateEventIsPublishedOrCanceled(Event event) {
         if ((event.getState().equals(StateEvent.PUBLISHED)) || (event.getState().equals(StateEvent.CANCELED))) {
+            throw new ValidationRequestException(String.format("Cannot publish the event because it's not in " +
+                    "the right state: %s", event.getState()));
+        }
+    }
+
+    private void checkStateEventIsPublished(Event event) {
+        if (event.getState().equals(StateEvent.PUBLISHED)) {
             throw new ValidationRequestException(String.format("Cannot publish the event because it's not in " +
                     "the right state: %s", event.getState()));
         }

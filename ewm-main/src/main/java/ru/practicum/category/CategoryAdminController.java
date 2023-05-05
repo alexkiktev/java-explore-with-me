@@ -26,14 +26,15 @@ public class CategoryAdminController {
 
     @PatchMapping("/{catId}")
     @ResponseStatus(HttpStatus.OK)
-    public CategoryDto updateCategory(@RequestBody @Valid CategoryDto categoryDto, @PathVariable Long categoryId) {
+    public CategoryDto updateCategory(@RequestBody @Valid CategoryDto categoryDto,
+                                      @PathVariable(name = "catId") Long categoryId) {
         log.info("Received a PATCH request to change the category {}: {}", categoryId, categoryDto);
         return categoryService.updateCategory(categoryDto, categoryId);
     }
 
     @DeleteMapping("/{catId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCategory(@PathVariable Long categoryId) {
+    public void deleteCategory(@PathVariable(name = "catId") Long categoryId) {
         log.info("Received a DELETE request to delete a category id {}", categoryId);
         categoryService.deleteCategory(categoryId);
     }
