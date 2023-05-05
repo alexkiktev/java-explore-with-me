@@ -3,7 +3,6 @@ package ru.practicum.request.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.StateEvent;
 import ru.practicum.event.repository.EventRepository;
@@ -35,7 +34,6 @@ public class RequestServiceImpl implements RequestService {
     private final UserRepository userRepository;
 
     @Override
-    @Transactional
     public RequestDto createRequest(Long userId, Long eventId) {
         User user = getUser(userId);
         Event event = getEvent(eventId);
@@ -59,7 +57,6 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    @Transactional
     public RequestDto cancelRequest(Long userId, Long requestId) {
         getUser(userId);
         Request request = getRequest(requestId);
@@ -71,7 +68,6 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    @Transactional
     public EventRequestStatusUpdateResultDto updateRequestsStatus(Long userId, Long eventId,
                                                                   EventRequestStatusUpdateRequestDto
                                                                           eventRequestStatusUpdateRequestDto) {
@@ -121,7 +117,6 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<RequestDto> getRequestsByUser(Long userId) {
         getUser(userId);
         List<RequestDto> requestDtos = new ArrayList<>();
@@ -131,7 +126,6 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<RequestDto> getRequestsForUserEvent(Long userId, Long eventId) {
         getUser(userId);
         Event event = getEvent(eventId);

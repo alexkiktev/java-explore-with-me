@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.dto.CompilationNewDto;
 import ru.practicum.compilation.dto.CompilationUpdateDto;
@@ -31,7 +30,6 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationMapper compilationMapper;
 
     @Override
-    @Transactional
     public CompilationDto createCompilation(CompilationNewDto compilationNewDto) {
         if (compilationNewDto.getEvents() == null) {
             compilationNewDto.setEvents(new ArrayList<>());
@@ -47,7 +45,6 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
-    @Transactional
     public CompilationDto updateCompilation(Long compilationId, CompilationUpdateDto compilationUpdateDto) {
         Compilation updatedCompilation = getCompilation(compilationId);
         Optional.ofNullable(compilationUpdateDto.getTitle()).ifPresent(updatedCompilation::setTitle);
@@ -61,7 +58,6 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
-    @Transactional
     public void deleteCompilation(Long compilationId) {
         getCompilation(compilationId);
         compilationRepository.deleteById(compilationId);
@@ -69,13 +65,11 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public CompilationDto getCompilationById(Long compilationId) {
         return compilationMapper.toCompilationDto(getCompilation(compilationId));
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
         List<CompilationDto> compilationDtos = new ArrayList<>();
         Pageable pageParams = PageRequest.of(from / size, size);

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.category.mapper.CategoryMapper;
@@ -24,7 +23,6 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryMapper categoryMapper;
 
     @Override
-    @Transactional
     public CategoryDto createCategory(CategoryDto categoryDto) {
         CategoryDto createdCategoryDto = categoryMapper.toCategoryDto(categoryRepository
                 .save(categoryMapper.toCategory(categoryDto)));
@@ -33,7 +31,6 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @Transactional
     public CategoryDto updateCategory(CategoryDto categoryDto, Long categoryId) {
         Category updatedCategory = getCategoryById(categoryId);
         Optional.ofNullable(categoryDto.getName()).ifPresent(updatedCategory::setName);
@@ -42,7 +39,6 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @Transactional
     public void deleteCategory(Long categoryId) {
         Category deletedCategory = getCategoryById(categoryId);
         categoryRepository.deleteById(categoryId);
@@ -50,7 +46,6 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<CategoryDto> getCategories(Integer from, Integer size) {
         List<CategoryDto> categoryDtos = new ArrayList<>();
         categoryRepository.findAll(PageRequest.of(from / size, size))
@@ -60,7 +55,6 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public CategoryDto getCategory(Long categoryId) {
         return categoryMapper.toCategoryDto(getCategoryById(categoryId));
     }

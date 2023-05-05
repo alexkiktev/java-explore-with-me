@@ -7,7 +7,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.StatsClient;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
@@ -42,7 +41,6 @@ public class EventServiceImpl implements EventService {
     private final StatsMapper statsMapper;
 
     @Override
-    @Transactional
     public EventFullDto createEvent(Long userId, NewEventDto newEventDto) {
         if (!newEventDto.getEventDate().isAfter(LocalDateTime.now().plusHours(2))) {
             throw new ValidationRequestException(String.format("Field: eventDate. Error: the event cannot be earlier " +
@@ -54,7 +52,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional
     public EventFullDto updateEventAdmin(Long eventId, UpdateEventDto updateEventDto) {
         Event event = getEvent(eventId);
         if (updateEventDto.getEventDate() != null) {
@@ -78,7 +75,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional
     public EventFullDto updateEventByUser(Long userId, Long eventId, UpdateEventDto updateEventDto) {
         Event event = getEvent(eventId);
         checkEventOwner(event, userId);
@@ -104,7 +100,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<EventFullDto> getEventsByUser(Long userId, Integer from, Integer size) {
         getUser(userId);
         List<EventFullDto> eventFullDtos = new ArrayList<>();
@@ -116,7 +111,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public EventFullDto getEventByUserAndId(Long userId, Long eventId) {
         getUser(userId);
         Event event = getEvent(eventId);
@@ -125,7 +119,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<EventFullDto> getEventsAdmin(List<Long> users, List<StateEvent> states, List<Long> categories,
                                              LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from,
                                              Integer size) {
@@ -140,7 +133,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<EventShortDto> getEventsWithParameters(String text, List<Long> categories, Boolean paid,
                                                        LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                        Boolean onlyAvailable, SortParam sort, Integer from,
@@ -162,7 +154,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public EventFullDto getEventByIdPublic(Long id, HttpServletRequest request) {
         Event event = eventRepository.findEventByIdAndState(id, StateEvent.PUBLISHED);
         if (event == null) {
