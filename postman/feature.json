@@ -60,7 +60,7 @@
 							"\r",
 							"const target = pm.response.json();\r",
 							"\r",
-							"pm.test(\"Событие должно содержать поля: id, title, annotation, category, paid, eventDate, initiator, views, confirmedRequests, participantLimit, state, createdOn, publishedOn, location, requestModeration, comments\", function () {\r",
+							"pm.test(\"Событие должно содержать поля: id, title, annotation, category, paid, eventDate, initiator, views, confirmedRequests, participantLimit, state, createdOn, publishedOn, location, requestModeration\", function () {\r",
 							"pm.expect(target).to.have.property('id');\r",
 							"pm.expect(target).to.have.property('title');\r",
 							"pm.expect(target).to.have.property('annotation');\r",
@@ -70,13 +70,6 @@
 							"pm.expect(target).to.have.property('paid');\r",
 							"pm.expect(target).to.have.property('views');\r",
 							"pm.expect(target).to.have.property('confirmedRequests');\r",
-							"pm.expect(target).to.have.property('comments');\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Test event 'comments' field\", function () {\r",
-							"    var jsonData = pm.response.json();\r",
-							"    pm.expect(jsonData).to.have.property('comments');\r",
-							"    pm.expect(jsonData.comments.length, 'length of \"comments\" must be \"0\"').to.eql(0);\r",
 							"});"
 						],
 						"type": "text/javascript"
