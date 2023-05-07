@@ -13,11 +13,6 @@ import ru.practicum.StatsClient;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
 import ru.practicum.client.StatsMapper;
-import ru.practicum.comment.dto.CommentShortDto;
-import ru.practicum.comment.mapper.CommentMapper;
-import ru.practicum.comment.model.Comment;
-import ru.practicum.comment.model.StatusComment;
-import ru.practicum.comment.repository.CommentRepository;
 import ru.practicum.event.dto.*;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.*;
@@ -45,8 +40,6 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
-    private final CommentRepository commentRepository;
-    private final CommentMapper commentMapper;
     private final StatsClient statsClient;
     private final StatsMapper statsMapper;
 
@@ -57,10 +50,8 @@ public class EventServiceImpl implements EventService {
                     "than two hours from the current moment. Value: %s", newEventDto.getEventDate()));
         }
         Event event = createDataEvent(newEventDto, userId);
-        Event createdEvent = eventRepository.save(event);
-        List<CommentShortDto> comments = getShortPubslishedComments(createdEvent);
         log.info("User id {} has created new event: {}", userId, event);
-        return eventMapper.toEventDto(createdEvent, comments);
+        return eventMapper.toEventDto(eventRepository.save(event));
     }
 
     @Override
@@ -82,9 +73,8 @@ public class EventServiceImpl implements EventService {
             }
         }
         updateDataEvent(updateEventDto, event);
-        List<CommentShortDto> comments = getShortPubslishedComments(event);
         log.info("Admin has updated the event id {}: new data {}", eventId, event);
-        return eventMapper.toEventDto(eventRepository.save(event), comments);
+        return eventMapper.toEventDto(eventRepository.save(event));
     }
 
     @Override
@@ -108,9 +98,8 @@ public class EventServiceImpl implements EventService {
             }
         }
         updateDataEvent(updateEventDto, event);
-        List<CommentShortDto> comments = getShortPubslishedComments(event);
         log.info("User id {} has updated event id {}: {}", userId, eventId, event);
-        return eventMapper.toEventDto(eventRepository.save(event), comments);
+        return eventMapper.toEventDto(eventRepository.save(event));
     }
 
     @Override
@@ -118,11 +107,8 @@ public class EventServiceImpl implements EventService {
         getUser(userId);
         List<EventFullDto> eventFullDtos = new ArrayList<>();
         Pageable pageParams = PageRequest.of(from / size, size);
-        List<Event> events = eventRepository.findByInitiatorId(userId, pageParams);
-        for (Event event : events) {
-            List<CommentShortDto> comments = getShortPubslishedComments(event);
-            eventFullDtos.add(eventMapper.toEventDto(event, comments));
-        }
+        eventRepository.findByInitiatorId(userId, pageParams)
+                .forEach(e -> eventFullDtos.add(eventMapper.toEventDto(e)));
         log.info("List of events created by the user: {}", eventFullDtos);
         return eventFullDtos;
     }
@@ -131,9 +117,8 @@ public class EventServiceImpl implements EventService {
     public EventFullDto getEventByUserAndId(Long userId, Long eventId) {
         getUser(userId);
         Event event = getEvent(eventId);
-        List<CommentShortDto> comments = getShortPubslishedComments(event);
         log.info("Received event id {} created by the user id: {}", eventId, userId);
-        return eventMapper.toEventDto(event, comments);
+        return eventMapper.toEventDto(event);
     }
 
     @Override
@@ -144,11 +129,8 @@ public class EventServiceImpl implements EventService {
         List<EventFullDto> eventFullDtos = new ArrayList<>();
         Specification<Event> eventCriterias = EventCriteriaQuery.getFilterEventsAdmin(users, states, categories,
                 rangeStart, rangeEnd);
-        List<Event> events = eventRepository.findAll(eventCriterias, pageParams).getContent();
-        for (Event event : events) {
-            List<CommentShortDto> comments = getShortPubslishedComments(event);
-            eventFullDtos.add(eventMapper.toEventDto(event, comments));
-        }
+        eventRepository.findAll(eventCriterias,
+                pageParams).getContent().forEach(e -> eventFullDtos.add(eventMapper.toEventDto(e)));
         log.info("The admin searched for events according to the specified criteria");
         return eventFullDtos;
     }
@@ -167,8 +149,7 @@ public class EventServiceImpl implements EventService {
         for (Event event : events) {
             event.setViews(event.getViews() + 1);
             eventRepository.save(event);
-            List<CommentShortDto> comments = getShortPubslishedComments(event);
-            eventShortDtos.add(eventMapper.toEventShortDto(event, comments));
+            eventShortDtos.add(eventMapper.toEventShortDto(event));
         }
         statsClient.createHit(statsMapper.toHitCreateDto(request));
         log.info("The result of the event search by the specified criteria: {}", eventShortDtos);
@@ -183,23 +164,9 @@ public class EventServiceImpl implements EventService {
         }
         event.setViews(event.getViews() + 1);
         eventRepository.save(event);
-        List<CommentShortDto> comments = getShortPubslishedComments(event);
         statsClient.createHit(statsMapper.toHitCreateDto(request));
         log.info("Event search result by id: {}", event);
-        return eventMapper.toEventShortDto(event, comments);
-    }
-
-    private List<CommentShortDto> getShortPubslishedComments(Event event) {
-        List<CommentShortDto> commentShortDtos = new ArrayList<>();
-        Long id = event.getId();
-        List<Comment> comments = commentRepository.findAllByEventIdAndStatus(id, StatusComment.PUBLISHED);
-        for (Comment comment : comments) {
-            CommentShortDto commentShortDto = commentMapper.toCommentShortDto(comment);
-            commentShortDtos.add(commentShortDto);
-        }
-        //commentRepository.findAllByEventIdAndStatus(event.getId(), StatusComment.PUBLISHED)
-        //        .forEach(c -> commentShortDtos.add(commentMapper.toCommentShortDto(c)));
-        return commentShortDtos;
+        return eventMapper.toEventShortDto(event);
     }
 
     private User getUser(Long userId) {
