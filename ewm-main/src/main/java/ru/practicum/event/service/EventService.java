@@ -32,6 +32,6 @@ public interface EventService {
                                                 Boolean onlyAvailable, SortParam sort, Integer from,
                                                 Integer size, HttpServletRequest request);
 
-    EventShortDto getEventByIdPublic(Long id, HttpServletRequest request);
+    EventFullDto getEventByIdPublic(Long id, HttpServletRequest request);
 
 }

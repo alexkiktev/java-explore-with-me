@@ -157,7 +157,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventShortDto getEventByIdPublic(Long id, HttpServletRequest request) {
+    public EventFullDto getEventByIdPublic(Long id, HttpServletRequest request) {
         Event event = eventRepository.findEventByIdAndState(id, StateEvent.PUBLISHED);
         if (event == null) {
             throw new NotFoundException(String.format("Event with id=%s was not found", id));
@@ -166,7 +166,7 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
         statsClient.createHit(statsMapper.toHitCreateDto(request));
         log.info("Event search result by id: {}", event);
-        return eventMapper.toEventShortDto(event);
+        return eventMapper.toEventDto(event);
     }
 
     private User getUser(Long userId) {
