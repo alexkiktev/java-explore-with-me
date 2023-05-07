@@ -17,13 +17,17 @@ public class CommentCriteriaQuery {
         return (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (events != null) {
-                predicates.add(root.get("event").get("id").in(events));
+                if (events.get(0) != 0) {
+                    predicates.add(root.get("event").get("id").in(events));
+                }
             }
             if (users != null) {
-                predicates.add(root.get("author").in(users));
+                if (users.get(0) != 0) {
+                    predicates.add(root.get("author").in(users));
+                }
             }
             if (statusComments != null) {
-                predicates.add(root.get("status").get("id").in(statusComments));
+                predicates.add(root.get("status").in(statusComments));
             }
             if (rangeStart != null) {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("created"), rangeStart));

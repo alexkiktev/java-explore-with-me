@@ -18,13 +18,17 @@ public class EventCriteriaQuery {
         return (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (users != null) {
-                predicates.add(root.get("initiator").get("id").in(users));
+                if (users.get(0) != 0) {
+                    predicates.add(root.get("initiator").get("id").in(users));
+                }
             }
             if (states != null) {
                 predicates.add(root.get("state").in(states));
             }
             if (categories != null) {
-                predicates.add(root.get("category").get("id").in(categories));
+                if (categories.get(0) != 0) {
+                    predicates.add(root.get("category").get("id").in(categories));
+                }
             }
             if (rangeStart != null) {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), rangeStart));
@@ -49,7 +53,9 @@ public class EventCriteriaQuery {
                                 "%" + text.toLowerCase() + "%")));
             }
             if (categories != null) {
-                predicates.add(root.get("category").get("id").in(categories));
+                if (categories.get(0) != 0) {
+                    predicates.add(root.get("category").get("id").in(categories));
+                }
             }
             if (paid != null) {
                 predicates.add(criteriaBuilder.equal(root.get("paid"), paid));

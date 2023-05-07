@@ -1,5 +1,7 @@
 DELETE FROM requests;
 ALTER TABLE requests ALTER COLUMN id RESTART WITH 1;
+DELETE FROM comments;
+ALTER TABLE comments ALTER COLUMN id RESTART WITH 1;
 DELETE FROM compilations_events;
 DELETE FROM compilations;
 ALTER TABLE compilations ALTER COLUMN id RESTART WITH 1;

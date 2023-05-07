@@ -12,8 +12,8 @@ public class CommentMapper {
         CommentFullDto commentFullDto = new CommentFullDto();
         commentFullDto.setId(comment.getId());
         commentFullDto.setText(comment.getText());
-        commentFullDto.setEvent(comment.getEvent());
-        commentFullDto.setAuthor(comment.getAuthor());
+        commentFullDto.setEvent(comment.getEvent().getTitle());
+        commentFullDto.setAuthor(comment.getAuthor().getName());
         commentFullDto.setStatus(comment.getStatus());
         commentFullDto.setCreated(comment.getCreated());
         return commentFullDto;
@@ -23,8 +23,8 @@ public class CommentMapper {
         CommentShortDto commentShortDto = new CommentShortDto();
         commentShortDto.setId(comment.getId());
         commentShortDto.setText(comment.getText());
-        commentShortDto.setEvent(comment.getEvent());
-        commentShortDto.setAuthor(comment.getAuthor());
+        commentShortDto.setEvent(comment.getEvent().getTitle());
+        commentShortDto.setAuthor(comment.getAuthor().getName());
         commentShortDto.setCreated(comment.getCreated());
         return commentShortDto;
     }

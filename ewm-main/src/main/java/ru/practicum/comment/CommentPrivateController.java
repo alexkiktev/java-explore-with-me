@@ -47,7 +47,8 @@ public class CommentPrivateController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<CommentFullDto> getCommentsByUser(@PathVariable Long userId,
-                                                    @RequestParam(name = "status") StatusComment statusComments) {
+                                                    @RequestParam(name = "status",
+                                                            required = false) StatusComment statusComments) {
         log.info("Получен GET-запрос для вывода всех собственных комментариев пользователя id {} со статусом {}",
                 userId, statusComments);
         return commentService.getCommentsByUser(userId, statusComments);

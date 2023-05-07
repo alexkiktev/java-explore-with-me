@@ -38,8 +38,8 @@ public class CommentServiceImpl implements CommentService {
     public CommentFullDto createComment(Long userId, Long eventId, CommentNewDto commentNewDto) {
         Comment comment = new Comment();
         comment.setText(commentNewDto.getText());
-        comment.setEvent(getEvent(eventId));
         comment.setAuthor(getUser(userId));
+        comment.setEvent(getEvent(eventId));
         comment.setStatus(StatusComment.PENDING);
         comment.setCreated(LocalDateTime.now());
         log.info("Пользователем id {} создан комментарий к событию id {}: {}", userId, eventId, commentNewDto);
@@ -63,9 +63,9 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentFullDto updateStatusComment(Long commentId, CommentStatusRequestDto commentStatusRequestDto) {
+    public CommentFullDto updateStatusComment(Long commentId, ActionComment actionComment) {
         Comment comment = getCommentEntity(commentId);
-        if (commentStatusRequestDto.getActionComment().equals(ActionComment.PUBLISH_COMMENT)) {
+        if (actionComment.equals(ActionComment.PUBLISH_COMMENT)) {
             comment.setStatus(StatusComment.PUBLISHED);
         } else {
             comment.setStatus(StatusComment.REJECTED);
@@ -110,8 +110,13 @@ public class CommentServiceImpl implements CommentService {
     public List<CommentFullDto> getCommentsByUser(Long userId, StatusComment statusComments) {
         getUser(userId);
         List<CommentFullDto> commentFullDtos = new ArrayList<>();
-        commentRepository.findAllByAuthorIdAndStatus(userId, statusComments)
-                .forEach(c -> commentFullDtos.add(commentMapper.toCommentFullDto(c)));
+        if (statusComments != null) {
+            commentRepository.findAllByAuthorIdAndStatus(userId, statusComments)
+                    .forEach(c -> commentFullDtos.add(commentMapper.toCommentFullDto(c)));
+        } else {
+            commentRepository.findAllByAuthorId(userId)
+                    .forEach(c -> commentFullDtos.add(commentMapper.toCommentFullDto(c)));
+        }
         log.info("Получен список комментариев пользователя {} со статусом {}", userId, statusComments);
         return commentFullDtos;
     }

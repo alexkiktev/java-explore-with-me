@@ -1,6 +1,7 @@
 package ru.practicum.comment.service;
 
 import ru.practicum.comment.dto.*;
+import ru.practicum.comment.model.ActionComment;
 import ru.practicum.comment.model.StatusComment;
 
 import java.time.LocalDateTime;
@@ -15,7 +16,7 @@ public interface CommentService {
 
     List<CommentFullDto> getCommentsByUser(Long userId, StatusComment statusComments);
 
-    CommentFullDto updateStatusComment(Long commentId, CommentStatusRequestDto commentStatusRequestDto);
+    CommentFullDto updateStatusComment(Long commentId, ActionComment actionComment);
 
     List<CommentFullDto> getCommentsAdmin(List<Long> events, List<Long> users, List<StatusComment> statusComments,
                                           LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size);

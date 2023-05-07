@@ -19,7 +19,7 @@ public class CommentPublicController {
 
     private final CommentService commentService;
 
-    @GetMapping("/{eventId}")
+    @GetMapping("/events/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public List<CommentShortDto> getCommentsByEvent(@PathVariable Long eventId,
                                                   @PositiveOrZero @RequestParam(name = "from",

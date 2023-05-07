@@ -6,11 +6,10 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.comment.dto.CommentFullDto;
-import ru.practicum.comment.dto.CommentStatusRequestDto;
+import ru.practicum.comment.model.ActionComment;
 import ru.practicum.comment.model.StatusComment;
 import ru.practicum.comment.service.CommentService;
 
-import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
@@ -27,9 +26,9 @@ public class CommentAdminController {
     @PatchMapping("/{commentId}")
     @ResponseStatus(HttpStatus.OK)
     public CommentFullDto updateStatusComment(@PathVariable Long commentId,
-                                              @Valid @RequestBody CommentStatusRequestDto commentStatusRequestDto) {
+                                              @RequestParam(name = "action") ActionComment actionComment) {
         log.info("Получен PATCH-запрос на изменение статуса комментария id {}", commentId);
-        return commentService.updateStatusComment(commentId, commentStatusRequestDto);
+        return commentService.updateStatusComment(commentId, actionComment);
     }
 
     @GetMapping
