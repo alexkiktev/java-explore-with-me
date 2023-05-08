@@ -6,6 +6,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.comment.dto.*;
 import ru.practicum.comment.mapper.CommentMapper;
 import ru.practicum.comment.model.ActionComment;
@@ -27,6 +29,7 @@ import java.util.Objects;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(isolation = Isolation.SERIALIZABLE)
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
@@ -48,12 +51,12 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentFullDto updateComment(Long userId, Long commentId, CommentNewDto commentNewDto) {
-        getUser(userId);
+        checkUserExistById(userId);
         Comment comment = getCommentEntity(commentId);
         if (!Objects.equals(comment.getAuthor().getId(), userId)) {
             throw new ValidationRequestException("Only the author can change the comment.");
         }
-        if (!comment.getStatus().equals(StatusComment.PENDING)) {
+        if (comment.getStatus() != StatusComment.PENDING) {
             throw new ValidationRequestException("Comment must have status PENDING.");
         }
         comment.setText(commentNewDto.getText());
@@ -65,7 +68,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentFullDto updateStatusComment(Long commentId, ActionComment actionComment) {
         Comment comment = getCommentEntity(commentId);
-        if (actionComment.equals(ActionComment.PUBLISH_COMMENT)) {
+        if (actionComment == ActionComment.PUBLISH_COMMENT) {
             comment.setStatus(StatusComment.PUBLISHED);
         } else {
             comment.setStatus(StatusComment.REJECTED);
@@ -76,7 +79,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public void deleteComment(Long userId, Long commentId) {
-        getUser(userId);
+        checkUserExistById(userId);
         Comment comment = getCommentEntity(commentId);
         if (!Objects.equals(comment.getAuthor().getId(), userId)) {
             throw new ValidationRequestException("Only the author can delete the comment.");
@@ -87,7 +90,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public void deleteCommentAdmin(Long commentId) {
-        getCommentEntity(commentId);
+        checkCommentExistById(commentId);
         commentRepository.deleteById(commentId);
         log.info("Администратором удален комментарий id {}", commentId);
     }
@@ -108,7 +111,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentFullDto> getCommentsByUser(Long userId, StatusComment statusComments) {
-        getUser(userId);
+        checkUserExistById(userId);
         List<CommentFullDto> commentFullDtos = new ArrayList<>();
         if (statusComments != null) {
             commentRepository.findAllByAuthorIdAndStatus(userId, statusComments)
@@ -123,7 +126,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentShortDto> getCommentsByEvent(Long eventId, Integer from, Integer size) {
-        getEvent(eventId);
+        checkEventExistById(eventId);
         List<CommentShortDto> commentShortDtos = new ArrayList<>();
         Pageable pageParams = PageRequest.of(from / size, size);
         commentRepository.findAllByEventId(eventId, pageParams)
@@ -142,13 +145,28 @@ public class CommentServiceImpl implements CommentService {
                 new NotFoundException(String.format("User with id=%s was not found", userId)));
     }
 
+    private void checkUserExistById(Long userId) {
+        userRepository.findById(userId).orElseThrow(() ->
+                new NotFoundException(String.format("User with id=%s was not found", userId)));
+    }
+
     private Event getEvent(Long eventId) {
         return eventRepository.findById(eventId).orElseThrow(() ->
                 new NotFoundException(String.format("Event with id=%s was not found", eventId)));
     }
 
+    private void checkEventExistById(Long eventId) {
+        eventRepository.findById(eventId).orElseThrow(() ->
+                new NotFoundException(String.format("Event with id=%s was not found", eventId)));
+    }
+
     private Comment getCommentEntity(Long commentId) {
         return commentRepository.findById(commentId).orElseThrow(() ->
+                new NotFoundException(String.format("Comment with id=%s was not found", commentId)));
+    }
+
+    private void checkCommentExistById(Long commentId) {
+        commentRepository.findById(commentId).orElseThrow(() ->
                 new NotFoundException(String.format("Comment with id=%s was not found", commentId)));
     }
 

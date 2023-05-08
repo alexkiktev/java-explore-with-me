@@ -26,7 +26,7 @@ public class Comment {
     @ManyToOne
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
-    @Column(name = "status")
+    @Column(name = "status", length = 10)
     @Enumerated(EnumType.STRING)
     private StatusComment status;
     @Column(name = "created", nullable = false)
